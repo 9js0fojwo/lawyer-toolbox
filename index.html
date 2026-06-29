@@ -321,14 +321,27 @@ function generateTool(){
   btn.disabled = true;
   load.style.display = 'block';
 
-  fetch('/.netlify/functions/generate-tool', {
+  fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
-    body: JSON.stringify({prompt: prompt})
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer sk-d837718311ae4143b9215ee6934ee29b'
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        {role:'system', content:'你是一个法律工具代码生成器。用户描述需求，你生成完整可运行的HTML代码。只返回HTML代码片段（含style和script），不要解释，不要markdown标记，不要html/head/body标签。移动端优先，max-width:480px，设计简洁，白色背景，计算精确。'},
+        {role:'user', content: prompt}
+      ],
+      max_tokens: 4096,
+      temperature: 0.3
+    })
   }).then(function(r){ return r.json(); })
     .then(function(data){
-      if(data.error){ alert('错误：'+data.error); return; }
+      var code = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '';
+      if(!code){ alert('生成失败：'+(data.error||'未知错误')); return; }
       var tools = loadMyTools();
-      tools.unshift({ name: prompt, code: data.code, time: Date.now() });
+      tools.unshift({ name: prompt, code: code, time: Date.now() });
       saveMyTools(tools);
       inp.value = '';
       renderMyTools();
