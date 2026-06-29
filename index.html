@@ -56,6 +56,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue'
 .c-self .cat-body .placeholder{font-style:italic}
 .c-self .cat-body .sub{font-size:11px;color:#d0d0d0;margin-top:4px}
 
+/* 自建工具 UI */
+.my-input-area{display:flex;gap:8px;padding:8px 0 10px}
+.my-inp{flex:1;border:1px solid #e0e0e5;border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit;outline:none;background:#fff}
+.my-inp:focus{border-color:#999}
+.my-btn{font-size:12px;font-weight:600;color:#fff;background:#555;border:none;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.my-btn:active{background:#333}
+.my-btn:disabled{opacity:.4}
+.my-loading{text-align:center;font-size:12px;color:#999;padding:12px 0}
+.my-tools-list{max-height:300px;overflow-y:auto;margin:0 -8px;padding:0 8px}
+.my-tool-item{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:#333;margin-bottom:2px}
+.my-tool-item:hover{background:#f5f5f7}
+.my-tool-item .mt-icon{font-size:16px;flex-shrink:0}
+.my-tool-item .mt-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.my-tool-item .mt-del{color:#ccc;font-size:14px;padding:2px 6px;border-radius:4px;cursor:pointer;flex-shrink:0}
+.my-tool-item .mt-del:hover{color:#E24B4A;background:#fff0f0}
+.my-tool-modal{position:fixed;inset:0;background:#fff;z-index:200;overflow-y:auto;display:none;flex-direction:column}
+.my-tool-modal.show{display:flex}
+.mt-topbar{display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid #f0f0f0;position:sticky;top:0;background:#fff;z-index:10}
+.mt-back{font-size:14px;color:#555;cursor:pointer;background:none;border:none;font-family:inherit;padding:4px 8px}
+.mt-title{font-size:15px;font-weight:600;flex:1}
+.mt-content{flex:1;padding:16px;overflow-y:auto}
+
 /* 精选工具 */
 .featured-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
 .feat-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;align-items:center;gap:12px}
@@ -187,17 +209,18 @@ var _hmt = _hmt || [];
       </div>
     </div>
     <!-- 自建工具 -->
-    <div class="cat-panel c-self">
+    <div class="cat-panel c-self" id="myPanel" style="height:auto;min-height:260px">
       <div class="cat-head">
         <div class="cat-icon">🔧</div>
         <div class="cat-name">自建工具</div>
-        <div class="cat-num">个人</div>
+        <div id="myCount" class="cat-num">0个</div>
       </div>
-      <div class="cat-body">
-        <div class="placeholder">通过 AI 创建你的专属工具</div>
-        <div class="sub">登录后，你创建的工具将出现在这里</div>
-        <div class="sub">仅自己可见 · 不上传 · 不公开</div>
+      <div class="my-input-area">
+        <input class="my-inp" id="myInp" placeholder="描述你需要的工具，如：根据案件标的额计算律师费…" maxlength="200">
+        <button class="my-btn" id="myBtn" onclick="generateTool()">生成</button>
       </div>
+      <div class="my-loading" id="myLoading" style="display:none">AI 正在生成工具…</div>
+      <div class="my-tools-list" id="myToolsList"></div>
     </div>
   </div>
 
@@ -237,20 +260,116 @@ var _hmt = _hmt || [];
     </div>
   </div>
 
+
+<!-- 自建工具预览 -->
+<div class="my-tool-modal" id="myToolModal">
+  <div class="mt-topbar">
+    <button class="mt-back" onclick="closeMyTool()">← 关闭</button>
+    <div class="mt-title" id="mtTitle"></div>
+  </div>
+  <div class="mt-content" id="mtContent"></div>
+</div>
 </div>
 
 <script>
+/* ===== 搜索 ===== */
 document.getElementById('searchInp').addEventListener('input',function(e){
   var kw=e.target.value.toLowerCase();
   document.querySelectorAll('.cat-item,.feat-card').forEach(function(el){
     el.style.display=(el.textContent||'').toLowerCase().indexOf(kw)>=0?'':'';
   });
-  document.querySelectorAll('.cat-panel').forEach(function(panel){
-    var vis=panel.querySelectorAll('.cat-item[style*="display:"]').length;
-    var tot=panel.querySelectorAll('.cat-item').length;
-    panel.style.display=vis===tot?'none':'';
-  });
 });
+
+/* ===== 自建工具 ===== */
+var MY_KEY = 'lawyer_my_tools_v1';
+
+function loadMyTools(){
+  try{ return JSON.parse(localStorage.getItem(MY_KEY)||'[]'); }catch(e){return [];}
+}
+function saveMyTools(tools){
+  localStorage.setItem(MY_KEY, JSON.stringify(tools));
+}
+
+function renderMyTools(){
+  var tools = loadMyTools();
+  var list = document.getElementById('myToolsList');
+  var count = document.getElementById('myCount');
+  count.textContent = tools.length+'个';
+
+  if(tools.length===0){
+    list.innerHTML = '<div style="font-size:12px;color:#ccc;text-align:center;padding:16px">还没有自建工具，在上面输入需求试试</div>';
+    return;
+  }
+  list.innerHTML = tools.map(function(t,i){
+    return '<div class="my-tool-item" onclick="openMyTool('+i+')">'+
+      '<span class="mt-icon">🛠️</span>'+
+      '<span class="mt-name">'+escapeHtml(t.name)+'</span>'+
+      '<span class="mt-del" onclick="event.stopPropagation();deleteMyTool('+i+')">×</span>'+
+      '</div>';
+  }).join('');
+}
+
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function generateTool(){
+  var inp = document.getElementById('myInp');
+  var btn = document.getElementById('myBtn');
+  var load = document.getElementById('myLoading');
+  var prompt = inp.value.trim();
+  if(!prompt) return;
+
+  btn.disabled = true;
+  load.style.display = 'block';
+
+  fetch('/.netlify/functions/generate-tool', {
+    method: 'POST',
+    body: JSON.stringify({prompt: prompt})
+  }).then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ alert('错误：'+data.error); return; }
+      var tools = loadMyTools();
+      tools.unshift({ name: prompt, code: data.code, time: Date.now() });
+      saveMyTools(tools);
+      inp.value = '';
+      renderMyTools();
+      openMyTool(0);
+    })
+    .catch(function(e){ alert('请求失败：'+e.message); })
+    .finally(function(){
+      btn.disabled = false;
+      load.style.display = 'none';
+    });
+}
+
+function openMyTool(index){
+  var tools = loadMyTools();
+  var t = tools[index];
+  if(!t) return;
+  var modal = document.getElementById('myToolModal');
+  document.getElementById('mtTitle').textContent = t.name;
+  document.getElementById('mtContent').innerHTML = t.code || '<p style="color:#999">代码生成中…</p>';
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMyTool(){
+  document.getElementById('myToolModal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function deleteMyTool(index){
+  if(!confirm('删除这个工具？')) return;
+  var tools = loadMyTools();
+  tools.splice(index,1);
+  saveMyTools(tools);
+  renderMyTools();
+}
+
+document.getElementById('myInp').addEventListener('keydown',function(e){
+  if(e.key==='Enter') generateTool();
+});
+
+renderMyTools();
 </script>
 </body>
 </html>
