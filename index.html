@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="律师工具箱">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>律师工具箱</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;background:#f5f5f7;color:#1d1d1f}
+.wrap{max-width:1200px;margin:0 auto;padding:32px 28px 60px}
+
+/* 顶栏 */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+.topbar h1{font-size:26px;font-weight:800;letter-spacing:-1px}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.search-wrap{display:flex;align-items:center;background:#e8e8ed;border-radius:12px;padding:0 14px;width:240px}
+.search-wrap input{border:none;outline:none;font-size:14px;background:transparent;padding:10px 0;font-family:inherit;width:100%}
+.search-wrap input::placeholder{color:#999}
+.search-wrap .s-icon{color:#999;margin-right:8px;font-size:14px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#e0e0e5;display:flex;align-items:center;justify-content:center;font-size:15px}
+
+/* 分类标题 */
+.sec-title{font-size:13px;font-weight:700;color:#8e8e93;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;padding-left:4px}
+
+/* 工具网格 */
+.tools-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:36px}
+
+/* 分类面板 */
+.cat-panel{background:#fff;border-radius:20px;padding:20px 20px 14px;box-shadow:0 1px 4px rgba(0,0,0,.04);display:flex;flex-direction:column;height:260px;overflow:hidden}
+.cat-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-shrink:0}
+.cat-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.cat-name{font-size:15px;font-weight:700}
+.cat-num{font-size:11px;color:#999;margin-left:auto;background:#f5f5f7;padding:2px 8px;border-radius:8px}
+.cat-list{overflow-y:auto;flex:1;margin:0 -8px;padding:0 8px}
+.cat-item{display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;cursor:pointer;transition:background .12s;font-size:13px;color:#444}
+.cat-item:hover{background:#f5f5f7}
+.cat-item .i-dot{font-size:14px;flex-shrink:0;width:22px;text-align:center}
+
+/* 分类配色 */
+.c-1 .cat-icon{background:#fff4e6;color:#e07b28}
+.c-2 .cat-icon{background:#eef2ff;color:#4a6cdf}
+.c-3 .cat-icon{background:#edf7f0;color:#3d8b5e}
+.c-4 .cat-icon{background:#fdf0f7;color:#c7508a}
+.c-5 .cat-icon{background:#eef6fc;color:#3e80b8}
+
+/* 自建工具面板 */
+.c-self{border:2px dashed #e0e0e5;background:#fafafa}
+.c-self .cat-icon{background:#f0f0f0;color:#999}
+.c-self .cat-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#b0b0b0;font-size:13px;line-height:1.8;overflow:auto;padding:10px 0}
+.c-self .cat-body .placeholder{font-style:italic}
+.c-self .cat-body .sub{font-size:11px;color:#d0d0d0;margin-top:4px}
+
+/* 精选工具 */
+.featured-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:36px}
+.feat-card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);cursor:pointer;transition:transform .12s,box-shadow .12s;display:flex;align-items:center;gap:12px}
+.feat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.feat-card .f-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.feat-card .f-info{flex:1;min-width:0}
+.feat-card .f-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.feat-card .f-desc{font-size:11px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feat-card .f-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:8px;flex-shrink:0}
+
+/* 精选配色 */
+.fr-1 .f-icon{background:#f5e6ff;color:#7c3aed}
+.fr-1 .f-tag{color:#7c3aed;background:#f5e6ff}
+.fr-2 .f-icon{background:#fff4e6;color:#e07b28}
+.fr-2 .f-tag{color:#e07b28;background:#fff4e6}
+.fr-3 .f-icon{background:#e8f5ee;color:#3d8b5e}
+.fr-3 .f-tag{color:#3d8b5e;background:#e8f5ee}
+
+@media(max-width:900px){
+  .tools-grid{grid-template-columns:repeat(2,1fr)}
+  .featured-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .tools-grid{grid-template-columns:1fr}
+  .featured-grid{grid-template-columns:1fr}
+  .wrap{padding:20px 16px 40px}
+  .search-wrap{width:150px}
+  .topbar h1{font-size:20px}
+}
+</style>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?5c228975b7a22badf25882e7b0eb94f7";
+  var s = document.getElementsByTagName("script")[0];
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <h1>⚖️ 律师工具箱</h1>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <span class="s-icon">🔍</span>
+        <input type="text" placeholder="搜索工具..." id="searchInp">
+      </div>
+      <div class="avatar">👤</div>
+    </div>
+  </div>
+
+  <!-- 工具分类 -->
+  <div class="sec-title">工具分类</div>
+  <div class="tools-grid">
+    <!-- 计算工具 -->
+    <div class="cat-panel c-1">
+      <div class="cat-head">
+        <div class="cat-icon">💰</div>
+        <div class="cat-name">计算工具</div>
+        <div class="cat-num">6</div>
+      </div>
+      <div class="cat-list">
+        <div class="cat-item"><span class="i-dot">🏥</span> 工伤赔偿计算</div>
+        <div class="cat-item"><span class="i-dot">💵</span> 利息 / 逾期利息</div>
+        <div class="cat-item"><span class="i-dot">⏱️</span> 加班费计算</div>
+        <div class="cat-item"><span class="i-dot">⚖️</span> 诉讼费计算</div>
+        <div class="cat-item"><span class="i-dot">🚗</span> 交通事故赔偿</div>
+        <div class="cat-item"><span class="i-dot">💼</span> 经济补偿金</div>
+      </div>
+    </div>
+    <!-- 时效查询 -->
+    <div class="cat-panel c-2">
+      <div class="cat-head">
+        <div class="cat-icon">⏰</div>
+        <div class="cat-name">时效查询</div>
+        <div class="cat-num">4</div>
+      </div>
+      <div class="cat-list">
+        <div class="cat-item"><span class="i-dot">📋</span> 诉讼时效</div>
+        <div class="cat-item"><span class="i-dot">🏛️</span> 劳动仲裁时效</div>
+        <div class="cat-item"><span class="i-dot">📝</span> 行政复议时效</div>
+        <div class="cat-item"><span class="i-dot">📤</span> 上诉期计算</div>
+      </div>
+    </div>
+    <!-- 日期工具 -->
+    <div class="cat-panel c-3">
+      <div class="cat-head">
+        <div class="cat-icon">📅</div>
+        <div class="cat-name">日期工具</div>
+        <div class="cat-num">3</div>
+      </div>
+      <div class="cat-list">
+        <div class="cat-item"><span class="i-dot">📆</span> 上诉截止日</div>
+        <div class="cat-item"><span class="i-dot">📎</span> 举证期限</div>
+        <div class="cat-item"><span class="i-dot">🔔</span> 保全到期提醒</div>
+      </div>
+    </div>
+    <!-- 劳动用工 -->
+    <div class="cat-panel c-4">
+      <div class="cat-head">
+        <div class="cat-icon">🏢</div>
+        <div class="cat-name">劳动用工</div>
+        <div class="cat-num">4</div>
+      </div>
+      <div class="cat-list">
+        <div class="cat-item"><span class="i-dot">🏖️</span> 年休假计算</div>
+        <div class="cat-item"><span class="i-dot">👶</span> 产假 / 陪产假</div>
+        <div class="cat-item"><span class="i-dot">🏥</span> 病假工资</div>
+        <div class="cat-item"><span class="i-dot">👋</span> 离职补偿金</div>
+      </div>
+    </div>
+    <!-- 常用网站 -->
+    <div class="cat-panel c-5">
+      <div class="cat-head">
+        <div class="cat-icon">🌐</div>
+        <div class="cat-name">常用网站</div>
+        <div class="cat-num">5</div>
+      </div>
+      <div class="cat-list">
+        <div class="cat-item"><span class="i-dot">📜</span> 裁判文书网</div>
+        <div class="cat-item"><span class="i-dot">🔍</span> 执行信息公开</div>
+        <div class="cat-item"><span class="i-dot">🏢</span> 企业信用信息</div>
+        <div class="cat-item"><span class="i-dot">📊</span> LPR 利率查询</div>
+        <div class="cat-item"><span class="i-dot">🏛️</span> 最高人民法院</div>
+      </div>
+    </div>
+    <!-- 自建工具 -->
+    <div class="cat-panel c-self">
+      <div class="cat-head">
+        <div class="cat-icon">🔧</div>
+        <div class="cat-name">自建工具</div>
+        <div class="cat-num">个人</div>
+      </div>
+      <div class="cat-body">
+        <div class="placeholder">通过 AI 创建你的专属工具</div>
+        <div class="sub">登录后，你创建的工具将出现在这里</div>
+        <div class="sub">仅自己可见 · 不上传 · 不公开</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 精选推荐 -->
+  <div class="sec-title">精选推荐</div>
+  <div class="featured-grid" id="featuredGrid">
+    <div class="feat-card fr-1" onclick="alert('即将上线')">
+      <div class="f-icon">🔒</div>
+      <div class="f-info">
+        <div class="f-name">文书脱敏工具</div>
+        <div class="f-desc">一键脱敏人名身份证手机号地址</div>
+      </div>
+      <div class="f-tag">推荐</div>
+    </div>
+    <div class="feat-card fr-2" onclick="alert('即将上线')">
+      <div class="f-icon">📋</div>
+      <div class="f-info">
+        <div class="f-name">合同条款检索</div>
+        <div class="f-desc">关键词快速定位合同条款</div>
+      </div>
+      <div class="f-tag">热门</div>
+    </div>
+    <div class="feat-card fr-3" onclick="alert('即将上线')">
+      <div class="f-icon">📊</div>
+      <div class="f-info">
+        <div class="f-name">赔偿金额速算</div>
+        <div class="f-desc">输入参数一键出赔偿总额</div>
+      </div>
+      <div class="f-tag">常用</div>
+    </div>
+    <div class="feat-card" style="background:#fafafa;border:2px dashed #e5e5e5;cursor:default" onclick="alert('更多精选工具即将上线')">
+      <div class="f-icon" style="background:#f0f0f0;color:#bbb">＋</div>
+      <div class="f-info">
+        <div class="f-name" style="color:#bbb">更多工具</div>
+        <div class="f-desc" style="color:#ccc">即将上线</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.getElementById('searchInp').addEventListener('input',function(e){
+  var kw=e.target.value.toLowerCase();
+  document.querySelectorAll('.cat-item,.feat-card').forEach(function(el){
+    el.style.display=(el.textContent||'').toLowerCase().indexOf(kw)>=0?'':'';
+  });
+  document.querySelectorAll('.cat-panel').forEach(function(panel){
+    var vis=panel.querySelectorAll('.cat-item[style*="display:"]').length;
+    var tot=panel.querySelectorAll('.cat-item').length;
+    panel.style.display=vis===tot?'none':'';
+  });
+});
+</script>
+</body>
+</html>
