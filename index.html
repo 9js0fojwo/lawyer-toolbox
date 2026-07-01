@@ -328,9 +328,9 @@ function generateTool(){
       'Authorization': 'Bearer sk-d837718311ae4143b9215ee6934ee29b'
     },
     body: JSON.stringify({
-      model: 'deepseek-chat',
+      model: 'deepseek-v4-pro',
       messages: [
-        {role:'system', content:'你是一个法律工具代码生成器。用户描述需求，你生成完整可运行的HTML代码。只返回HTML代码片段（含style和script），不要解释，不要markdown标记，不要html/head/body标签。移动端优先，max-width:480px，设计简洁，白色背景，计算精确。'},
+        {role:'system', content:'你是法律工具代码生成器。用户描述需求，你直接输出纯HTML代码（含style和script），直接以<!DOCTYPE html>或<div>开头。严谨的法律计算工具，计算结果精确到两位小数。移动端优先，白色背景，设计简洁专业。禁止事项：不输出解释文字、不输出```html或```标记、不输出markdown格式、不输出html/head/body外壳标签（可用div片段）。'},
         {role:'user', content: prompt}
       ],
       max_tokens: 4096,
