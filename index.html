@@ -338,8 +338,18 @@ function generateTool(){
     })
   }).then(function(r){ return r.json(); })
     .then(function(data){
-      var code = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '';
-      if(!code){ alert('生成失败：'+(data.error||'未知错误')); return; }
+      var raw = (data.choices && data.choices[0] && data.choices[0].message) ? data.choices[0].message.content : '';
+      if(!raw){ alert('生成失败：'+(data.error||'未知错误')); return; }
+      var code = raw;
+      var m = raw.match(/```(?:html|HTML)?\s*([\s\S]*?)```/);
+      if(m){ code = m[1].trim(); }
+      else {
+        var tags = ['<!DOCTYPE','<html','<div','<style','<script'];
+        var start = 999999;
+        for(var i=0;i<tags.length;i++){var p=raw.indexOf(tags[i]);if(p>-1&&p<start)start=p;}
+        if(start<999999) code = raw.substring(start).trim();
+      }
+      code = code.replace(/^[^<]{1,300}(?=<\w)/s, '');
       var tools = loadMyTools();
       tools.unshift({ name: prompt, code: code, time: Date.now() });
       saveMyTools(tools);
