@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本息计算器 — 逾期利息计算</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg: #f5f6fa; --card: #ffffff; --border: #e2e5ea; --text: #2d3436;
+  --text-secondary: #636e72; --accent: #2563eb; --accent-hover: #1d4ed8;
+  --danger: #dc2626; --danger-bg: #fef2f2; --success: #16a34a;
+  --success-bg: #f0fdf4; --warning: #d97706; --warning-bg: #fffbeb;
+  --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+.container { max-width: 1500px; margin: 0 auto; }
+h1 { font-size: 1.8em; text-align: center; margin-bottom: 8px; color: var(--text); }
+.subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9em; }
+
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px; }
+.card h2 { font-size: 1.15em; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid var(--border); color: var(--text); }
+.card h3 { font-size: 1em; margin-bottom: 10px; color: var(--text-secondary); }
+
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.config-item { display: flex; flex-direction: column; gap: 4px; }
+.config-item label { font-size: 0.85em; font-weight: 600; color: var(--text-secondary); }
+.config-item input, .config-item select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95em; transition: border-color 0.2s; }
+.config-item input:focus, .config-item select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.config-item input[type="number"] { font-family: "SF Mono", "Consolas", monospace; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+th { background: #f8fafc; padding: 10px 8px; text-align: center; font-weight: 600; border: 1px solid var(--border); white-space: nowrap; font-size: 0.85em; }
+td { padding: 8px; border: 1px solid var(--border); text-align: center; }
+td input { width: 100%; border: 1px solid transparent; padding: 6px 8px; text-align: center; font-size: 0.9em; border-radius: 4px; background: transparent; transition: all 0.15s; }
+td input:focus { border-color: var(--accent); background: #fff; outline: none; box-shadow: 0 0 0 2px rgba(37,99,235,0.08); }
+td input[type="date"] { min-width: 130px; }
+td input[type="number"] { font-family: "SF Mono", "Consolas", monospace; min-width: 100px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: none; border-radius: 6px; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-outline { background: #fff; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn-outline:hover { background: #eff6ff; }
+.btn-danger { background: #fff; color: var(--danger); border: 1.5px solid var(--danger); }
+.btn-danger:hover { background: var(--danger-bg); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #15803d; }
+.btn-sm { padding: 4px 10px; font-size: 0.8em; }
+.btn-lg { padding: 12px 32px; font-size: 1.1em; }
+.btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.summary-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; text-align: center; }
+.summary-card .label { font-size: 0.8em; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.summary-card .value { font-size: 1.6em; font-weight: 700; font-family: "SF Mono", "Consolas", monospace; }
+.summary-card .sub { font-size: 0.8em; color: var(--text-secondary); margin-top: 4px; }
+.summary-card.accent { border-left: 4px solid var(--accent); }
+.summary-card.danger { border-left: 4px solid var(--danger); }
+.summary-card.success { border-left: 4px solid var(--success); }
+.summary-card.warning { border-left: 4px solid var(--warning); }
+
+.result-table-wrapper { overflow-x: auto; }
+.result-table { font-size: 0.8em; }
+.result-table th { position: sticky; top: 0; z-index: 1; }
+.result-table td.number { font-family: "SF Mono", "Consolas", monospace; text-align: right; }
+.result-table td.formula { font-family: "SF Mono", "Consolas", monospace; font-size: 0.75em; text-align: left; color: var(--text-secondary); background: #fafafa; max-width: 280px; word-break: break-all; }
+.result-table tr.repayment-row { background: #fefce8; }
+.result-table tr.loan-row { background: #f0fdf4; }
+.result-table tr.repayment-row td { border-bottom: 2px solid #fde68a; }
+.result-table tr.formula-row td { background: #f8fafc; border-top-style: dashed; font-size: 0.75em; padding: 4px 8px; }
+
+.tabs { display: flex; gap: 0; margin-bottom: -1px; position: relative; z-index: 1; }
+.tab-btn { padding: 10px 24px; border: 1px solid var(--border); background: #f8fafc; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: all 0.15s; }
+.tab-btn:first-child { border-radius: var(--radius) 0 0 0; }
+.tab-btn:last-child { border-radius: 0 var(--radius) 0 0; }
+.tab-btn.active { background: #fff; border-bottom-color: #fff; font-weight: 700; color: var(--accent); }
+.tab-content { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 24px; }
+.tab-content.active { display: block; }
+
+.toast { position: fixed; top: 20px; right: 20px; background: #333; color: #fff; padding: 12px 24px; border-radius: 8px; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+.rate-contract { color: var(--accent); font-weight: 600; }
+.rate-overdue { color: var(--danger); font-weight: 600; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600; }
+.tag-contract { background: #dbeafe; color: #1e40af; }
+.tag-overdue { background: #fee2e2; color: #991b1b; }
+.tag-info { background: #e0e7ff; color: #3730a3; }
+
+.toolbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.toolbar .btn { font-size: 0.85em; }
+
+/* Formula toggle */
+.formula-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: #f1f5f9; border: 1px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.85em; user-select: none; transition: all 0.15s; }
+.formula-toggle:hover { background: #e2e8f0; }
+.formula-toggle.active { background: #dbeafe; border-color: var(--accent); color: var(--accent); }
+.formula-toggle .dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; transition: all 0.15s; }
+.formula-toggle.active .dot { background: var(--accent); }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+.modal-overlay.active { display: flex; }
+.modal { background: #fff; border-radius: 12px; padding: 28px; max-width: 750px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal h2 { margin-bottom: 16px; font-size: 1.2em; }
+.modal .btn-group { justify-content: flex-end; }
+.import-preview { max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; margin: 12px 0; }
+.import-preview table th { position: sticky; top: 0; z-index: 2; }
+.import-summary { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 0.9em; }
+.import-summary.warn { background: #fffbeb; border-color: #fde68a; }
+
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .card { padding: 16px; }
+  .config-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📊 本息计算器</h1>
+  <p class="subtitle">民间借贷逾期利息计算 · 先息后本 · 区分合同利率与逾期利率</p>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-outline btn-sm" onclick="saveToFile()">💾 存档到文件</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('loadFileInput').click()">📂 从文件读档</button>
+    <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📋 下载导入模板</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('excelFileInput').click()">📥 导入 Excel 表格</button>
+    <input type="file" id="loadFileInput" accept=".json" style="display:none" onchange="loadFromFile(event)">
+    <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(event)">
+  </div>
+
+  <!-- Configuration -->
+  <div class="card">
+    <h2>⚙️ 计算设置</h2>
+    <div class="config-grid">
+      <div class="config-item">
+        <label>计息天数基准</label>
+        <select id="cfgDaysBasis">
+          <option value="360" selected>360 天/年（商业标准）</option>
+          <option value="365">365 天/年（民事标准）</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>约定年利率 (%)</label>
+        <input type="number" id="cfgContractRate" value="14.8" step="0.1" min="0" max="36">
+      </div>
+      <div class="config-item">
+        <label>逾期年利率 (%)</label>
+        <input type="number" id="cfgOverdueRate" value="24" step="0.1" min="0" max="36">
+      </div>
+      <div class="config-item">
+        <label>还款抵扣顺序</label>
+        <select id="cfgRepayMethod">
+          <option value="interest-first" selected>先息后本（推荐）</option>
+          <option value="principal-first">先本后息</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Section -->
+  <div class="card">
+    <h2>📋 数据录入</h2>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('loan')">💰 出借记录</button>
+      <button class="tab-btn" onclick="switchTab('repay')">💳 还款记录</button>
+      <button class="tab-btn" onclick="switchTab('batch')">📋 批量粘贴</button>
+    </div>
+
+    <div class="tab-content active" id="tab-loan">
+      <p style="font-size:0.85em;color:var(--text-secondary);margin-bottom:12px;">
+        每笔借款的<span class="rate-contract">到期日</span>之后未还部分，将按<span class="tag tag-overdue">逾期利率</span>计算利息。到期日可不填（视为无固定期限）。
+      </p>
+      <table id="loanTable">
+        <thead><tr><th style="width:40px">#</th><th>付款人</th><th>收款人</th><th>转账卡号</th><th>出借日期</th><th>出借金额（元）</th><th>约定到期日（选填）</th><th>备注</th><th style="width:60px">操作</th></tr></thead>
+        <tbody id="loanTbody"></tbody>
+      </table>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" onclick="addLoanRow()">+ 添加出借记录</button>
+        <button class="btn btn-outline btn-sm" onclick="addLoanRowQuick()">+ 快速添加多行 (×5)</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-repay">
+      <table id="repayTable">
+        <thead><tr><th style="width:40px">#</th><th>付款人</th><th>收款人</th><th>转账卡号</th><th>还款日期</th><th>还款金额（元）</th><th>备注</th><th style="width:60px">操作</th></tr></thead>
+        <tbody id="repayTbody"></tbody>
+      </table>
+      <div class="btn-group">
+        <button class="btn btn-outline btn-sm" onclick="addRepayRow()">+ 添加还款记录</button>
+        <button class="btn btn-outline btn-sm" onclick="addRepayRowQuick()">+ 快速添加多行 (×5)</button>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-batch">
+      <p style="font-size:0.85em;color:var(--text-secondary);margin-bottom:8px;">
+        从 Excel 复制粘贴数据（Tab 分隔）。格式：<code>日期 金额 [到期日] [备注]</code>
+      </p>
+      <div style="display:flex;gap:16px;">
+        <div style="flex:1;">
+          <h3>📤 出借记录</h3>
+          <textarea id="batchLoan" rows="8" placeholder="例：&#10;2024-01-15&#9;50000&#9;2025-01-15&#9;第一笔&#10;2024-03-20&#9;30000&#9;&#9;第二笔" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:'SF Mono','Consolas',monospace;font-size:0.85em;resize:vertical;"></textarea>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="parseBatchLoans()">解析并导入</button>
+        </div>
+        <div style="flex:1;">
+          <h3>📥 还款记录</h3>
+          <textarea id="batchRepay" rows="8" placeholder="例：&#10;2024-06-01&#9;10000&#9;还款备注&#10;2024-12-31&#9;50000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;font-family:'SF Mono','Consolas',monospace;font-size:0.85em;resize:vertical;"></textarea>
+          <button class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="parseBatchRepays()">解析并导入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calculate -->
+  <div style="text-align:center;margin:24px 0;">
+    <button class="btn btn-primary btn-lg" onclick="calculate()">🔢 开始计算</button>
+    <button class="btn btn-outline btn-lg" onclick="clearAll()" style="margin-left:12px;">🗑️ 清空重置</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none;">
+    <div class="summary-grid" id="summaryGrid"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <h2 style="margin:0;padding:0;border:none;">📑 逐笔计算明细</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <label class="formula-toggle" id="formulaToggle" onclick="toggleFormulas()">
+            <span class="dot"></span> 📐 显示计算公式
+          </label>
+          <button class="btn btn-outline btn-sm" onclick="exportToExcel()">📥 导出 Excel</button>
+          <button class="btn btn-outline btn-sm" onclick="exportToCSV()">📥 导出 CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="copyResultTable()">📋 复制表格</button>
+        </div>
+      </div>
+      <div class="result-table-wrapper">
+        <table class="result-table" id="resultTable">
+          <thead id="resultHead"></thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="font-size:0.85em;color:var(--text-secondary);">
+      <strong>计算公式说明：</strong><br>
+      ① 天数 = 截止日期 − 起始日期<br>
+      ② 期间利息 = 本金 × 年利率 × 天数 ÷ 计息基准<br>
+      ③ 累计应付利息 = 前期累计 + 本期利息 − 抵扣利息<br>
+      ④ 还款抵扣：先息后本 = MIN(还款额, 累计利息)；先本后息 = MIN(还款额, 本金)<br>
+      ⑤ 期末本金 = 期初本金 + 本次新增借款 − 抵扣本金<br>
+      ⑥ 合同到期日前按<span class="tag tag-contract">合同利率</span>，到期日后按<span class="tag tag-overdue">逾期利率</span>
+    </div>
+  </div>
+</div>
+
+<!-- Import Preview Modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <h2>📋 Excel 导入预览</h2>
+    <div id="importSummary"></div>
+    <div class="import-preview"><table id="importPreviewTable"><thead></thead><tbody></tbody></table></div>
+    <div class="btn-group">
+      <button class="btn btn-outline btn-sm" onclick="closeImportModal()">取消</button>
+      <button class="btn btn-primary btn-sm" id="importConfirmBtn" onclick="confirmImport()">✅ 确认导入</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+let loans = [];
+let repayments = [];
+let loanCounter = 0;
+let repayCounter = 0;
+let lastCalcResults = null;
+let pendingImport = null;
+let showFormulas = false;
+
+const STORAGE_KEY = 'loan_calculator_state';
+
+// ========== LOCAL STORAGE ==========
+function autoSave() {
+  const state = {
+    loans, repayments, loanCounter, repayCounter,
+    config: {
+      daysBasis: document.getElementById('cfgDaysBasis').value,
+      contractRate: document.getElementById('cfgContractRate').value,
+      overdueRate: document.getElementById('cfgOverdueRate').value,
+      repayMethod: document.getElementById('cfgRepayMethod').value,
+    },
+    savedAt: new Date().toISOString(),
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function autoLoad() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const state = JSON.parse(raw);
+    if (state.loans) { loans = state.loans; loanCounter = state.loanCounter || loans.length; }
+    if (state.repayments) { repayments = state.repayments; repayCounter = state.repayCounter || repayments.length; }
+    if (state.config) {
+      const c = state.config;
+      if (c.daysBasis) document.getElementById('cfgDaysBasis').value = c.daysBasis;
+      if (c.contractRate) document.getElementById('cfgContractRate').value = c.contractRate;
+      if (c.overdueRate) document.getElementById('cfgOverdueRate').value = c.overdueRate;
+      if (c.repayMethod) document.getElementById('cfgRepayMethod').value = c.repayMethod;
+    }
+    renderLoanTable(); renderRepayTable();
+    showToast(`已恢复上次存档 (${state.savedAt ? new Date(state.savedAt).toLocaleString('zh-CN') : '未知时间'})`);
+    return true;
+  } catch(e) { return false; }
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.closest('#loanTable') || e.target.closest('#repayTable') || e.target.closest('.config-grid')) autoSave();
+});
+
+// ========== INIT ==========
+function init() {
+  if (!autoLoad()) {
+    addLoanRowWithData('2024-01-15', 500000, '2025-01-15', '第一笔');
+    addLoanRowWithData('2024-03-20', 200000, '', '第二笔（无固定期限）');
+    addRepayRowWithData('2024-06-01', 100000, '第一次还款');
+    addRepayRowWithData('2024-12-31', 200000, '第二次还款');
+  }
+}
+
+// ========== TABS ==========
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ========== ROW MANAGEMENT ==========
+function addLoanRowWithData(date, amount, maturity, note, payer, payee, bankCard) {
+  loanCounter++; loans.push({ id: loanCounter, date, amount: parseFloat(amount), maturity, note, payer: payer||'', payee: payee||'', bankCard: bankCard||'' }); renderLoanTable();
+}
+function addLoanRow() { loanCounter++; loans.push({ id: loanCounter, date: '', amount: '', maturity: '', note: '', payer: '', payee: '', bankCard: '' }); renderLoanTable(); }
+function addLoanRowQuick() { for (let i = 0; i < 5; i++) { loanCounter++; loans.push({ id: loanCounter, date: '', amount: '', maturity: '', note: '', payer: '', payee: '', bankCard: '' }); } renderLoanTable(); }
+function removeLoanRow(id) { loans = loans.filter(l => l.id !== id); renderLoanTable(); }
+function addRepayRowWithData(date, amount, note, payer, payee, bankCard) {
+  repayCounter++; repayments.push({ id: repayCounter, date, amount: parseFloat(amount), note, payer: payer||'', payee: payee||'', bankCard: bankCard||'' }); renderRepayTable();
+}
+function addRepayRow() { repayCounter++; repayments.push({ id: repayCounter, date: '', amount: '', note: '', payer: '', payee: '', bankCard: '' }); renderRepayTable(); }
+function addRepayRowQuick() { for (let i = 0; i < 5; i++) { repayCounter++; repayments.push({ id: repayCounter, date: '', amount: '', note: '', payer: '', payee: '', bankCard: '' }); } renderRepayTable(); }
+function removeRepayRow(id) { repayments = repayments.filter(r => r.id !== id); renderRepayTable(); }
+function updateLoanField(id, field, value) { const loan = loans.find(l => l.id === id); if (loan) loan[field] = value; }
+function updateRepayField(id, field, value) { const rep = repayments.find(r => r.id === id); if (rep) rep[field] = value; }
+
+function renderLoanTable() {
+  document.getElementById('loanTbody').innerHTML = loans.map(l => `
+    <tr><td>${l.id}</td>
+      <td><input type="text" value="${l.payer||''}" onchange="updateLoanField(${l.id},'payer',this.value)" placeholder="付款人" style="width:80px;"></td>
+      <td><input type="text" value="${l.payee||''}" onchange="updateLoanField(${l.id},'payee',this.value)" placeholder="收款人" style="width:80px;"></td>
+      <td><input type="text" value="${l.bankCard||''}" onchange="updateLoanField(${l.id},'bankCard',this.value)" placeholder="卡号" style="width:140px;"></td>
+      <td><input type="date" value="${l.date||''}" onchange="updateLoanField(${l.id},'date',this.value)"></td>
+      <td><input type="number" value="${l.amount||''}" step="0.01" min="0" onchange="updateLoanField(${l.id},'amount',this.value)" placeholder="如 500000"></td>
+      <td><input type="date" value="${l.maturity||''}" onchange="updateLoanField(${l.id},'maturity',this.value)" placeholder="选填"></td>
+      <td><input type="text" value="${l.note||''}" onchange="updateLoanField(${l.id},'note',this.value)" placeholder="备注"></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeLoanRow(${l.id})">✕</button></td></tr>`).join('');
+}
+
+function renderRepayTable() {
+  document.getElementById('repayTbody').innerHTML = repayments.map(r => `
+    <tr><td>${r.id}</td>
+      <td><input type="text" value="${r.payer||''}" onchange="updateRepayField(${r.id},'payer',this.value)" placeholder="付款人" style="width:80px;"></td>
+      <td><input type="text" value="${r.payee||''}" onchange="updateRepayField(${r.id},'payee',this.value)" placeholder="收款人" style="width:80px;"></td>
+      <td><input type="text" value="${r.bankCard||''}" onchange="updateRepayField(${r.id},'bankCard',this.value)" placeholder="卡号" style="width:140px;"></td>
+      <td><input type="date" value="${r.date||''}" onchange="updateRepayField(${r.id},'date',this.value)"></td>
+      <td><input type="number" value="${r.amount||''}" step="0.01" min="0" onchange="updateRepayField(${r.id},'amount',this.value)" placeholder="如 50000"></td>
+      <td><input type="text" value="${r.note||''}" onchange="updateRepayField(${r.id},'note',this.value)" placeholder="备注"></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeRepayRow(${r.id})">✕</button></td></tr>`).join('');
+}
+
+// ========== BATCH PARSE ==========
+function parseBatchLoans() {
+  const text = document.getElementById('batchLoan').value.trim(); if (!text) return;
+  text.split('\n').filter(l => l.trim()).forEach(line => {
+    const parts = line.split('\t'); if (parts.length < 2) return;
+    loanCounter++; loans.push({ id: loanCounter, date: parts[0].trim(), amount: parts[1].trim(), maturity: (parts[2]||'').trim(), note: (parts[3]||'').trim(), payer: '', payee: '', bankCard: '' });
+  });
+  renderLoanTable(); document.getElementById('batchLoan').value = '';
+  showToast(`已导入出借记录`);
+}
+function parseBatchRepays() {
+  const text = document.getElementById('batchRepay').value.trim(); if (!text) return;
+  text.split('\n').filter(l => l.trim()).forEach(line => {
+    const parts = line.split('\t'); if (parts.length < 2) return;
+    repayCounter++; repayments.push({ id: repayCounter, date: parts[0].trim(), amount: parts[1].trim(), note: (parts[2]||'').trim(), payer: '', payee: '', bankCard: '' });
+  });
+  renderRepayTable(); document.getElementById('batchRepay').value = '';
+  showToast(`已导入还款记录`);
+}
+
+// ========== TEMPLATE DOWNLOAD ==========
+function downloadTemplate() {
+  // Create workbook with two sheets
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: 出借记录
+  const loanData = [
+    ['付款人', '收款人', '转账卡号', '出借日期', '出借金额', '约定到期日（选填）', '备注'],
+    ['张三', '李四', '6222 **** **** 1234', '2024-01-15', 500000, '2025-01-15', '第一笔借款（示例）'],
+    ['', '', '', '2024-03-20', 200000, '', '第二笔借款（示例，无固定期限可不填到期日）'],
+    ['', '', '', '', '', '', '← 在此下方继续添加出借记录'],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(loanData);
+  ws1['!cols'] = [{wch: 10}, {wch: 10}, {wch: 18}, {wch: 14}, {wch: 14}, {wch: 18}, {wch: 30}];
+  XLSX.utils.book_append_sheet(wb, ws1, '出借记录');
+
+  // Sheet 2: 还款记录
+  const repayData = [
+    ['付款人', '收款人', '转账卡号', '还款日期', '还款金额', '备注'],
+    ['张三', '李四', '6222 **** **** 1234', '2024-06-01', 100000, '第一次还款（示例）'],
+    ['', '', '', '2024-12-31', 200000, '第二次还款（示例）'],
+    ['', '', '', '', '', '← 在此下方继续添加还款记录'],
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(repayData);
+  ws2['!cols'] = [{wch: 10}, {wch: 10}, {wch: 18}, {wch: 14}, {wch: 14}, {wch: 30}];
+  XLSX.utils.book_append_sheet(wb, ws2, '还款记录');
+
+  XLSX.writeFile(wb, '本息计算_导入模板.xlsx');
+  showToast('模板已下载，请填写后通过「导入 Excel 表格」上传');
+}
+
+// ========== SAVE / LOAD ==========
+function saveToFile() {
+  autoSave();
+  const state = {
+    version: 2, loans, repayments, loanCounter, repayCounter,
+    config: {
+      daysBasis: document.getElementById('cfgDaysBasis').value,
+      contractRate: document.getElementById('cfgContractRate').value,
+      overdueRate: document.getElementById('cfgOverdueRate').value,
+      repayMethod: document.getElementById('cfgRepayMethod').value,
+    },
+    results: lastCalcResults,
+    savedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `本息计算_存档_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('存档文件已下载');
+}
+
+function loadFromFile(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const state = JSON.parse(e.target.result);
+      if (!state.loans) { alert('存档文件格式无效。'); return; }
+      loans = state.loans; repayments = state.repayments || [];
+      loanCounter = state.loanCounter || loans.length;
+      repayCounter = state.repayCounter || repayments.length;
+      if (state.config) {
+        const c = state.config;
+        if (c.daysBasis) document.getElementById('cfgDaysBasis').value = c.daysBasis;
+        if (c.contractRate) document.getElementById('cfgContractRate').value = c.contractRate;
+        if (c.overdueRate) document.getElementById('cfgOverdueRate').value = c.overdueRate;
+        if (c.repayMethod) document.getElementById('cfgRepayMethod').value = c.repayMethod;
+        if (c.payer !== undefined) document.getElementById('cfgPayer').value = c.payer;
+        if (c.payee !== undefined) document.getElementById('cfgPayee').value = c.payee;
+        if (c.bankCard !== undefined) document.getElementById('cfgBankCard').value = c.bankCard;
+      }
+      renderLoanTable(); renderRepayTable(); autoSave();
+      if (state.results && state.results.rows) {
+        lastCalcResults = state.results;
+        renderResults(state.results.rows, state.results.summary);
+      } else { document.getElementById('results').style.display = 'none'; }
+      showToast(`已读档：${loans.length} 条出借，${repayments.length} 条还款`);
+    } catch(err) { alert('读档失败：' + err.message); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+
+// ========== EXCEL IMPORT ==========
+function excelSerialToDate(serial) {
+  if (typeof serial !== 'number' || serial < 40000) return null;
+  return new Date((serial - 25569) * 86400 * 1000);
+}
+function formatDate(d) { return (d && !isNaN(d.getTime())) ? d.toISOString().slice(0, 10) : ''; }
+function parseDateStr(str) {
+  if (!str) return null;
+  const clean = String(str).replace(/[年月]/g, '-').replace(/[日号]/g, '').trim();
+  const d = new Date(clean + (clean.includes('T') ? '' : 'T00:00:00'));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function importFromExcel(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: false });
+      let parsedLoans = [], parsedRepays = [];
+
+      // Check for template format: sheets named "出借记录" and "还款记录"
+      const hasLoanSheet = wb.SheetNames.some(s => s.includes('出借'));
+      const hasRepaySheet = wb.SheetNames.some(s => s.includes('还款'));
+
+      if (hasLoanSheet || hasRepaySheet) {
+        // Template format: parse each sheet separately
+        for (const name of wb.SheetNames) {
+          const ws = wb.Sheets[name];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+          if (rows.length < 2) continue;
+          const headers = rows[0].map(h => String(h || ''));
+          const isRepay = name.includes('还款');
+          // Detect new template format (has 付款人/收款人 columns)
+          const hasPartyCols = headers.some(h => h.includes('付款人') || h.includes('还款人') || h.includes('收款人') || h.includes('转账卡号') || h.includes('银行卡号'));
+          const colOffset = hasPartyCols ? 3 : 0; // first 3 cols are 付款人/收款人/转账卡号
+          const dateIdx = colOffset;
+          const amtIdx = colOffset + 1;
+          const maturityIdx = colOffset + 2;
+          const noteIdx = colOffset + (isRepay ? 2 : 3);
+
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r]; if (!row || !row[dateIdx] || !row[amtIdx]) continue;
+            const payer = hasPartyCols ? String(row[0] || '').trim() : '';
+            const payee = hasPartyCols ? String(row[1] || '').trim() : '';
+            const bankCard = hasPartyCols ? String(row[2] || '').trim() : '';
+            let dateVal = row[dateIdx];
+            let date;
+            if (typeof dateVal === 'number' && dateVal > 40000) date = excelSerialToDate(dateVal);
+            else date = parseDateStr(String(dateVal));
+            if (!date) continue;
+
+            const amt = parseFloat(String(row[amtIdx]).replace(/[,，\s]/g, ''));
+            if (isNaN(amt) || amt <= 0) continue;
+
+            if (isRepay) {
+              parsedRepays.push({ date: formatDate(date), amount: String(amt), note: String(row[noteIdx] || ''), payer, payee, bankCard });
+            } else {
+              const maturityVal = row[maturityIdx];
+              let maturity = '';
+              if (maturityVal) {
+                if (typeof maturityVal === 'number' && maturityVal > 40000) maturity = formatDate(excelSerialToDate(maturityVal));
+                else maturity = formatDate(parseDateStr(String(maturityVal)));
+              }
+              parsedLoans.push({ date: formatDate(date), amount: String(amt), maturity, note: String(row[noteIdx] || ''), payer, payee, bankCard });
+            }
+          }
+        }
+      } else {
+        // Legacy reference table format
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+        if (rows.length < 2) { alert('表格数据不足。'); return; }
+
+        const headerStr = rows.slice(0, 2).map(r => r.map(c => String(c||'')).join(',')).join('|');
+        let colMap = {};
+        if (headerStr.includes('起始时间') || headerStr.includes('借款本金')) {
+          (rows[1] || []).forEach((h, idx) => {
+            const s = String(h || '');
+            if (s.includes('起始时间')) colMap.startDate = idx;
+            if (s.includes('借款本金')) colMap.principal = idx;
+            if (s.includes('截止时间')) colMap.endDate = idx;
+            if (s.includes('已还金额')) colMap.repayAmount = idx;
+            if (s.includes('年利率')) colMap.rate = idx;
+            if (s.includes('增加借额') && !s.includes('日期')) colMap.newLoan = idx;
+            if (s.includes('增加借额日期')) colMap.newLoanDate = idx;
+          });
+
+          for (let r = 2; r < rows.length; r++) {
+            const row = rows[r]; if (!row || row.length === 0) continue;
+            const sv = colMap.startDate !== undefined ? row[colMap.startDate] : row[0];
+            const pv = colMap.principal !== undefined ? row[colMap.principal] : row[1];
+            const rv = colMap.repayAmount !== undefined ? row[colMap.repayAmount] : row[3];
+            const nv = colMap.newLoan !== undefined ? row[colMap.newLoan] : row[11];
+            const nd = colMap.newLoanDate !== undefined ? row[colMap.newLoanDate] : row[12];
+            const rateVal = colMap.rate !== undefined ? row[colMap.rate] : row[5];
+
+            let startDate = (typeof sv === 'number' && sv > 40000) ? excelSerialToDate(sv) : parseDateStr(String(sv));
+            if (!startDate) continue;
+
+            const rate = parseFloat(rateVal) || 0;
+            if (r === 2 && parseFloat(pv) > 0) {
+              parsedLoans.push({ date: formatDate(startDate), amount: String(parseFloat(pv)), maturity: '', note: `初始借款 (年利率 ${(rate*100).toFixed(1)}%)`, payer: '', payee: '', bankCard: '' });
+              if (rate > 0) document.getElementById('cfgContractRate').value = (rate * 100).toFixed(1);
+            }
+
+            const repayAmt = parseFloat(rv) || 0;
+            if (repayAmt > 0) {
+              let endDate = startDate;
+              if (colMap.endDate !== undefined) {
+                const ev = row[colMap.endDate];
+                endDate = (typeof ev === 'number' && ev > 40000) ? excelSerialToDate(ev) : parseDateStr(String(ev));
+              }
+              if (endDate) parsedRepays.push({ date: formatDate(endDate), amount: String(repayAmt), note: `第${parsedRepays.length+1}次还款`, payer: '', payee: '', bankCard: '' });
+            }
+
+            const newLoanAmt = parseFloat(nv) || 0;
+            if (newLoanAmt > 0) {
+              let newDate = startDate;
+              if (colMap.newLoanDate !== undefined) {
+                const ndv = row[colMap.newLoanDate];
+                newDate = (typeof ndv === 'number' && ndv > 40000) ? excelSerialToDate(ndv) : parseDateStr(String(ndv));
+              } else if (colMap.endDate !== undefined) {
+                const ev = row[colMap.endDate];
+                newDate = (typeof ev === 'number' && ev > 40000) ? excelSerialToDate(ev) : parseDateStr(String(ev));
+              }
+              if (newDate) parsedLoans.push({ date: formatDate(newDate), amount: String(newLoanAmt), maturity: '', note: `追加借款 (年利率 ${(rate*100).toFixed(1)}%)`, payer: '', payee: '', bankCard: '' });
+            }
+          }
+        } else {
+          // Simple format: date + amount
+          for (let r = 1; r < rows.length; r++) {
+            const row = rows[r]; if (!row || row.length < 2 || !row[0] || !row[1]) continue;
+            let date = (typeof row[0] === 'number' && row[0] > 40000) ? excelSerialToDate(row[0]) : parseDateStr(String(row[0]));
+            if (!date) continue;
+            const amt = parseFloat(String(row[1]).replace(/[,，\s]/g, ''));
+            if (isNaN(amt) || amt <= 0) continue;
+            parsedLoans.push({ date: formatDate(date), amount: String(amt), maturity: '', note: String(row[3] || row[2] || ''), payer: '', payee: '', bankCard: '' });
+          }
+        }
+      }
+
+      if (parsedLoans.length === 0 && parsedRepays.length === 0) {
+        alert('未能识别有效数据。\n\n请确认：\n1. 日期和金额列不为空\n2. 使用下载的模板格式（推荐）\n3. 或参考表格式（本息计算表）');
+        return;
+      }
+
+      pendingImport = { loans: parsedLoans, repays: parsedRepays };
+      showImportPreview(parsedLoans, parsedRepays);
+    } catch(err) { alert('Excel 解析失败：' + err.message); console.error(err); }
+  };
+  reader.readAsArrayBuffer(file); event.target.value = '';
+}
+
+function showImportPreview(importLoans, importRepays) {
+  document.getElementById('importModal').classList.add('active');
+  document.getElementById('importSummary').innerHTML = `<div class="import-summary">
+    <strong>📊 识别结果</strong><br>
+    📤 出借记录 <strong>${importLoans.length} 条</strong> &nbsp;|&nbsp;
+    📥 还款记录 <strong>${importRepays.length} 条</strong><br>
+    <span style="font-size:0.85em;color:var(--text-secondary);">确认无误后点击「确认导入」，导入后请核对数据并点击计算</span>
+  </div>`;
+
+  let previewHTML = '<tr><th>#</th><th>付款人</th><th>收款人</th><th>转账卡号</th><th>日期</th><th>金额</th><th>类型</th><th>到期日</th><th>备注</th></tr>';
+  const all = [...importLoans.map(l => ({...l, type:'📤 出借'})), ...importRepays.map(r => ({...r, type:'📥 还款', maturity:''}))]
+    .sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  all.forEach((item, i) => {
+    previewHTML += `<tr><td>${i+1}</td><td>${item.payer||''}</td><td>${item.payee||''}</td><td>${item.bankCard||''}</td><td>${item.date}</td><td style="text-align:right">${parseFloat(item.amount).toLocaleString('zh-CN')}</td><td>${item.type}</td><td>${item.maturity||'—'}</td><td style="text-align:left">${item.note||''}</td></tr>`;
+  });
+  document.getElementById('importPreviewTable').innerHTML = previewHTML;
+  document.getElementById('importConfirmBtn').onclick = function() { confirmImport(importLoans, importRepays); };
+}
+
+function confirmImport(importLoans, importRepays) {
+  for (const l of importLoans) { loanCounter++; loans.push({ id: loanCounter, date: l.date, amount: parseFloat(l.amount)||l.amount, maturity: l.maturity||'', note: l.note||'', payer: l.payer||'', payee: l.payee||'', bankCard: l.bankCard||'' }); }
+  for (const r of importRepays) { repayCounter++; repayments.push({ id: repayCounter, date: r.date, amount: parseFloat(r.amount)||r.amount, note: r.note||'', payer: r.payer||'', payee: r.payee||'', bankCard: r.bankCard||'' }); }
+  renderLoanTable(); renderRepayTable(); autoSave(); closeImportModal();
+  showToast(`已导入 ${importLoans.length} 条出借 + ${importRepays.length} 条还款，请核对后点击计算`);
+}
+
+function closeImportModal() { document.getElementById('importModal').classList.remove('active'); pendingImport = null; }
+
+// ========== FORMULA TOGGLE ==========
+function toggleFormulas() {
+  showFormulas = !showFormulas;
+  const toggle = document.getElementById('formulaToggle');
+  if (showFormulas) { toggle.classList.add('active'); toggle.innerHTML = '<span class="dot"></span> 📐 隐藏公式，显示数值'; }
+  else { toggle.classList.remove('active'); toggle.innerHTML = '<span class="dot"></span> 📐 显示计算公式'; }
+  if (lastCalcResults) renderResults(lastCalcResults.rows, lastCalcResults.summary);
+}
+
+// ========== CORE CALCULATION ==========
+function parseDate(str) { if (!str) return null; const d = new Date(str + 'T00:00:00'); return isNaN(d.getTime()) ? null : d; }
+function daysBetween(d1, d2) { return Math.round(Math.abs(d2 - d1) / 86400000); }
+function fmt(n) { if (n === null || n === undefined || isNaN(n)) return '—'; return parseFloat(n).toFixed(2); }
+function fmtRate(r) { return (r * 100).toFixed(1) + '%'; }
+
+class LoanTracker {
+  constructor(amount, date, maturityDate, loanId) {
+    this.originalAmount = amount; this.remainingAmount = amount;
+    this.startDate = date; this.maturityDate = maturityDate; this.loanId = loanId;
+  }
+  isOverdue(asOfDate) { return this.maturityDate ? asOfDate > this.maturityDate : false; }
+  getRate(asOfDate, cr, or) { return this.isOverdue(asOfDate) ? or : cr; }
+}
+
+function calculate() {
+  const daysBasis = parseInt(document.getElementById('cfgDaysBasis').value);
+  const contractRate = parseFloat(document.getElementById('cfgContractRate').value) / 100;
+  const overdueRate = parseFloat(document.getElementById('cfgOverdueRate').value) / 100;
+  const repayMethod = document.getElementById('cfgRepayMethod').value;
+
+  const validLoans = loans.filter(l => l.date && parseFloat(l.amount) > 0).map(l => ({
+    date: parseDate(l.date), amount: parseFloat(l.amount),
+    maturity: l.maturity ? parseDate(l.maturity) : null, note: l.note || '', id: l.id,
+    payer: l.payer || '', payee: l.payee || '', bankCard: l.bankCard || ''
+  })).sort((a, b) => a.date - b.date);
+  const validRepays = repayments.filter(r => r.date && parseFloat(r.amount) > 0).map(r => ({
+    date: parseDate(r.date), amount: parseFloat(r.amount), note: r.note || '', id: r.id,
+    payer: r.payer || '', payee: r.payee || '', bankCard: r.bankCard || ''
+  })).sort((a, b) => a.date - b.date);
+
+  if (validLoans.length === 0) { alert('请至少录入一条有效的出借记录。'); return; }
+
+  let events = [];
+  for (const l of validLoans) events.push({ type: 'loan', date: l.date, amount: l.amount, maturity: l.maturity, note: l.note, loanId: l.id, payer: l.payer, payee: l.payee, bankCard: l.bankCard });
+  for (const r of validRepays) events.push({ type: 'repay', date: r.date, amount: r.amount, note: r.note, repayId: r.id, payer: r.payer, payee: r.payee, bankCard: r.bankCard });
+  events.sort((a, b) => a.date - b.date);
+
+  let activeLoans = [];
+  let cumulInterest = 0, totalPrincipal = 0, totalIntPaid = 0, totalPrinPaid = 0;
+  let totalContractInt = 0, totalOverdueInt = 0;
+  let resultRows = [];
+
+  // Phase 1: Init
+  const startDate = events[0].date;
+  let i = 0, initPrincipal = 0;
+  while (i < events.length && events[i].date.getTime() === startDate.getTime()) {
+    if (events[i].type === 'loan') {
+      activeLoans.push(new LoanTracker(events[i].amount, events[i].date, events[i].maturity, events[i].loanId));
+      totalPrincipal += events[i].amount; initPrincipal += events[i].amount;
+    }
+    i++;
+  }
+  let prevDate = startDate;
+
+  // Phase 2: Process events
+  for (; i < events.length; i++) {
+    const event = events[i];
+    const periodEnd = event.date;
+    const days = daysBetween(prevDate, periodEnd);
+
+    let pContractInt = 0, pOverdueInt = 0;
+    // Per-loan interest breakdown for formula display
+    let intDetails = [];
+
+    if (days > 0 && activeLoans.length > 0) {
+      for (const t of activeLoans) {
+        const rate = t.getRate(periodEnd, contractRate, overdueRate);
+        const interest = t.remainingAmount * rate * days / daysBasis;
+        const rateLabel = t.isOverdue(periodEnd) ? '逾期' : '合同';
+        intDetails.push(`${fmt(t.remainingAmount)}×${fmtRate(rate)}×${days}÷${daysBasis}=${fmt(interest)}(${rateLabel})`);
+        if (t.isOverdue(periodEnd)) pOverdueInt += interest;
+        else pContractInt += interest;
+      }
+    }
+    const periodInt = pContractInt + pOverdueInt;
+    cumulInterest += periodInt; totalContractInt += pContractInt; totalOverdueInt += pOverdueInt;
+
+    const principalBefore = activeLoans.reduce((s, t) => s + t.remainingAmount, 0);
+    let repayInt = 0, repayPrin = 0, newLoanAmt = 0;
+    let evDesc = '', rowCls = '';
+    let formula_repayInt = '', formula_repayPrin = '', formula_endPrin = '';
+
+    if (event.type === 'loan') {
+      newLoanAmt = event.amount;
+      activeLoans.push(new LoanTracker(event.amount, event.date, event.maturity, event.loanId));
+      totalPrincipal += event.amount;
+      evDesc = `📤 出借 +${fmt(event.amount)}${event.maturity ? ' (到期:' + event.maturity.toISOString().slice(0,10) + ')' : ''}${event.note ? ' · ' + event.note : ''}`;
+      rowCls = 'loan-row';
+    } else {
+      const repayAmt = event.amount;
+      evDesc = `📥 还款 ${fmt(repayAmt)}${event.note ? ' · ' + event.note : ''}`;
+      const prevCumul = cumulInterest - periodInt; // cumulInterest before adding this period's interest
+      const totalIntDue = prevCumul + periodInt;   // = cumulInterest (after adding period interest)
+
+      if (repayMethod === 'interest-first') {
+        repayInt = Math.min(repayAmt, cumulInterest);
+        repayPrin = Math.min(repayAmt - repayInt, principalBefore);
+        formula_repayInt = `MIN(${fmt(repayAmt)}, ${fmt(totalIntDue)}) = ${fmt(repayInt)}`;
+        formula_repayPrin = `${fmt(repayAmt)} − ${fmt(repayInt)} = ${fmt(repayPrin)}`;
+      } else {
+        repayPrin = Math.min(repayAmt, principalBefore);
+        repayInt = Math.min(repayAmt - repayPrin, cumulInterest);
+        formula_repayPrin = `MIN(${fmt(repayAmt)}, ${fmt(principalBefore)}) = ${fmt(repayPrin)}`;
+        formula_repayInt = `${fmt(repayAmt)} − ${fmt(repayPrin)} = ${fmt(repayInt)}`;
+      }
+
+      if (repayPrin > 0) {
+        let remain = repayPrin;
+        for (const t of activeLoans) {
+          if (remain <= 0) break;
+          const deduct = Math.min(t.remainingAmount, remain);
+          t.remainingAmount -= deduct; remain -= deduct;
+        }
+        activeLoans = activeLoans.filter(t => t.remainingAmount > 0.0001);
+      }
+      cumulInterest -= repayInt;
+      totalIntPaid += repayInt; totalPrinPaid += repayPrin;
+      rowCls = 'repayment-row';
+    }
+
+    const endingPrincipal = activeLoans.reduce((s, t) => s + t.remainingAmount, 0);
+    const prevCumulInt = cumulInterest + repayInt - periodInt; // approximate
+
+    // Build formula strings
+    const formula_periodInt = intDetails.length > 0
+      ? intDetails.join('\n')
+      : (days > 0 ? `${fmt(principalBefore)}×利率×${days}÷${daysBasis}` : '天数=0，无利息');
+    formula_endPrin = newLoanAmt > 0
+      ? `${fmt(principalBefore)} + ${fmt(newLoanAmt)} = ${fmt(endingPrincipal)}`
+      : (repayPrin > 0 ? `${fmt(principalBefore)} − ${fmt(repayPrin)} = ${fmt(endingPrincipal)}` : '');
+    const formula_cumul = `${fmt(prevCumulInt + periodInt)} − ${fmt(repayInt)} = ${fmt(cumulInterest)}`;
+
+    resultRows.push({
+      startDate: prevDate, endDate: periodEnd, days, startPrincipal: principalBefore,
+      periodContractInterest: pContractInt, periodOverdueInterest: pOverdueInt, periodInterest: periodInt,
+      repayAmount: event.type === 'repay' ? event.amount : 0, repayInterest: repayInt, repayPrincipal: repayPrin,
+      cumulativeInterestAfter: cumulInterest, endingPrincipal, newLoanAmount: newLoanAmt,
+      eventType: event.type, eventDescription: evDesc, rowClass: rowCls, contractRate, overdueRate,
+      payer: event.payer || '', payee: event.payee || '', bankCard: event.bankCard || '',
+      formulas: {
+        days: `${formatDate(prevDate)} → ${formatDate(periodEnd)} = ${days}天`,
+        periodInt: formula_periodInt,
+        repayInt: formula_repayInt,
+        repayPrin: formula_repayPrin,
+        cumulInt: formula_cumul,
+        endPrin: formula_endPrin,
+      }
+    });
+    prevDate = periodEnd;
+  }
+
+  // Phase 3: Final row to today
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (activeLoans.length > 0 && prevDate < today) {
+    const days = daysBetween(prevDate, today);
+    let fContractInt = 0, fOverdueInt = 0;
+    let finalIntDetails = [];
+    if (days > 0) {
+      for (const t of activeLoans) {
+        const rate = t.getRate(today, contractRate, overdueRate);
+        const interest = t.remainingAmount * rate * days / daysBasis;
+        const rateLabel = t.isOverdue(today) ? '逾期' : '合同';
+        finalIntDetails.push(`${fmt(t.remainingAmount)}×${fmtRate(rate)}×${days}÷${daysBasis}=${fmt(interest)}(${rateLabel})`);
+        if (t.isOverdue(today)) fOverdueInt += interest;
+        else fContractInt += interest;
+      }
+    }
+    const finalInt = fContractInt + fOverdueInt;
+    cumulInterest += finalInt; totalContractInt += fContractInt; totalOverdueInt += fOverdueInt;
+    const finalPrin = activeLoans.reduce((s, t) => s + t.remainingAmount, 0);
+
+    const lastEvent = events.length > 0 ? events[events.length - 1] : null;
+    resultRows.push({
+      startDate: prevDate, endDate: today, days, startPrincipal: finalPrin,
+      periodContractInterest: fContractInt, periodOverdueInterest: fOverdueInt, periodInterest: finalInt,
+      repayAmount: 0, repayInterest: 0, repayPrincipal: 0, cumulativeInterestAfter: cumulInterest,
+      endingPrincipal: finalPrin, newLoanAmount: 0, eventType: 'pending',
+      eventDescription: '⏳ 截至今天（未还款）', rowClass: '', contractRate, overdueRate,
+      payer: lastEvent ? (lastEvent.payer || '') : '', payee: lastEvent ? (lastEvent.payee || '') : '', bankCard: lastEvent ? (lastEvent.bankCard || '') : '',
+      formulas: {
+        days: `${formatDate(prevDate)} → ${formatDate(today)} = ${days}天`,
+        periodInt: finalIntDetails.length > 0 ? finalIntDetails.join('\n') : (days > 0 ? `${fmt(finalPrin)}×利率×${days}÷${daysBasis}` : ''),
+        repayInt: '', repayPrin: '', cumulInt: '', endPrin: '',
+      }
+    });
+  }
+
+  const endingPrincipal = activeLoans.reduce((s, t) => s + t.remainingAmount, 0);
+  const summary = {
+    totalPrincipal, totalInterestPaid: totalIntPaid, totalPrincipalPaid: totalPrinPaid,
+    totalContractInterest: totalContractInt, totalOverdueInterest: totalOverdueInt,
+    cumulativeInterest: cumulInterest, endingPrincipal, activeLoans: activeLoans.length,
+    daysBasis, contractRate, overdueRate, repayMethod,
+  };
+
+  lastCalcResults = { rows: resultRows, summary };
+  autoSave();
+  renderResults(resultRows, summary);
+}
+
+// ========== RENDER ==========
+function renderResults(rows, summary) {
+  document.getElementById('results').style.display = 'block';
+  const rp = summary.endingPrincipal;
+  const totalOwed = rp + summary.cumulativeInterest;
+  const totalReceived = summary.totalPrincipalPaid + summary.totalInterestPaid;
+
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="summary-card accent"><div class="label">累计出借本金</div><div class="value">¥${fmt(summary.totalPrincipal)}</div></div>
+    <div class="summary-card danger"><div class="label">剩余未还本金</div><div class="value">¥${fmt(rp)}</div><div class="sub">已还本金 ¥${fmt(summary.totalPrincipalPaid)}</div></div>
+    <div class="summary-card warning"><div class="label">累计应付利息</div><div class="value">¥${fmt(summary.cumulativeInterest)}</div><div class="sub">合同利息 ¥${fmt(summary.totalContractInterest)} | 逾期利息 ¥${fmt(summary.totalOverdueInterest)}</div></div>
+    <div class="summary-card success"><div class="label">已收回总额</div><div class="value">¥${fmt(totalReceived)}</div><div class="sub">本金 ¥${fmt(summary.totalPrincipalPaid)} + 利息 ¥${fmt(summary.totalInterestPaid)}</div></div>
+    <div class="summary-card ${rp > 0 ? 'danger' : 'success'}"><div class="label">${rp > 0 ? '⚠️ 尚欠总额' : '✅ 已结清'}</div><div class="value">¥${fmt(totalOwed)}</div><div class="sub">本金 ¥${fmt(rp)} + 利息 ¥${fmt(summary.cumulativeInterest)}</div></div>
+  `;
+
+  // Build header
+  const headerCols = ['序号', '付款人', '收款人', '转账卡号', '借款日期', '还款日期', '起始日期', '截止日期', '天数', '期初本金', '期间合同利息', '期间逾期利息', '期间利息合计', '还款金额', '👉 抵扣利息', '👉 抵扣本金', '本次新增借款', '累计应付利息', '期末本金', '事件说明'];
+  document.getElementById('resultHead').innerHTML = `<tr>${headerCols.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+  // Build body
+  let bodyHTML = '';
+  rows.forEach((r, i) => {
+    const f = r.formulas || {};
+    const isOverdue = r.periodOverdueInterest > 0.01;
+
+    // Value row
+    bodyHTML += `<tr class="${r.rowClass}">
+      <td>${i + 1}</td>
+      <td>${r.payer||''}</td><td>${r.payee||''}</td><td>${r.bankCard||''}</td>
+      <td>${r.startDate.toISOString().slice(0,10)}</td><td>${r.endDate.toISOString().slice(0,10)}</td>
+      <td>${r.startDate.toISOString().slice(0,10)}</td><td>${r.endDate.toISOString().slice(0,10)}</td>
+      <td>${r.days}</td>
+      <td class="number">${fmt(r.startPrincipal)}</td>
+      <td class="number">${fmt(r.periodContractInterest)}</td>
+      <td class="number" style="color:${isOverdue ? 'var(--danger)' : 'inherit'}">${fmt(r.periodOverdueInterest)}</td>
+      <td class="number"><strong>${fmt(r.periodInterest)}</strong></td>
+      <td class="number">${r.repayAmount > 0 ? '<strong>' + fmt(r.repayAmount) + '</strong>' : '—'}</td>
+      <td class="number" style="color:var(--danger)">${r.repayInterest > 0 ? fmt(r.repayInterest) : '—'}</td>
+      <td class="number" style="color:var(--accent)">${r.repayPrincipal > 0 ? fmt(r.repayPrincipal) : '—'}</td>
+      <td class="number">${r.newLoanAmount > 0 ? '<strong style="color:var(--success)">+' + fmt(r.newLoanAmount) + '</strong>' : '—'}</td>
+      <td class="number">${fmt(r.cumulativeInterestAfter)}</td>
+      <td class="number"><strong>${fmt(r.endingPrincipal)}</strong></td>
+      <td style="text-align:left;font-size:0.85em;max-width:200px;">${r.eventDescription}</td>
+    </tr>`;
+
+    // Formula row (shown when toggle is on)
+    if (showFormulas) {
+      const formulaCells = [
+        '', // 序号
+        '', // 付款人
+        '', // 收款人
+        '', // 转账卡号
+        '', // 借款日期
+        '', // 还款日期
+        '', // 起始日期
+        '', // 截止日期
+        f.days || '', // 天数
+        '', // 期初本金
+        '', // 合同利息
+        '', // 逾期利息
+        f.periodInt ? f.periodInt.replace(/\n/g, '<br>') : '', // 利息合计 → show detail
+        '', // 还款金额
+        f.repayInt || '', // 抵扣利息
+        f.repayPrin || '', // 抵扣本金
+        '', // 新增借款
+        f.cumulInt || '', // 累计利息
+        f.endPrin || '', // 期末本金
+        '', // 事件说明
+      ];
+      bodyHTML += `<tr class="formula-row">${formulaCells.map(c => `<td class="formula">${c}</td>`).join('')}</tr>`;
+    }
+  });
+
+  document.getElementById('resultBody').innerHTML = bodyHTML;
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ========== EXPORT ==========
+function exportToCSV() {
+  let csv = '﻿序号,付款人,收款人,转账卡号,借款日期,还款日期,起始日期,截止日期,天数,期初本金,期间合同利息,期间逾期利息,期间利息合计,还款金额,抵扣利息,抵扣本金,本次新增借款,累计应付利息,期末本金,事件说明\n';
+  document.querySelectorAll('#resultBody tr:not(.formula-row)').forEach(row => {
+    const vals = [];
+    row.querySelectorAll('td').forEach(cell => vals.push(cell.textContent.replace(/,/g, '，').replace(/\n/g, ' ').trim()));
+    csv += vals.join(',') + '\n';
+  });
+  csv += '\n汇总\n';
+  document.querySelectorAll('#summaryGrid .summary-card').forEach(card => {
+    csv += `${card.querySelector('.label').textContent.trim()},${card.querySelector('.value').textContent.trim()}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `本息计算_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('CSV 已下载');
+}
+
+function exportToExcel() {
+  if (!lastCalcResults) { alert('请先进行计算。'); return; }
+  const rows = lastCalcResults.rows;
+  const summary = lastCalcResults.summary;
+
+  // Build data array with formulas
+  const headers = ['序号', '付款人', '收款人', '转账卡号', '借款日期', '还款日期', '起始日期', '截止日期', '天数', '期初本金', '期间合同利息', '期间逾期利息', '期间利息合计', '还款金额', '抵扣利息', '抵扣本金', '本次新增借款', '累计应付利息', '期末本金', '事件说明', '计算公式（利息明细）'];
+  const data = [headers];
+
+  rows.forEach((r, i) => {
+    const f = r.formulas || {};
+    let formulaText = f.periodInt ? f.periodInt.replace(/\n/g, '; ') : '';
+    if (f.repayInt) formulaText += (formulaText ? ' | ' : '') + '抵扣利息: ' + f.repayInt;
+    if (f.repayPrin) formulaText += (formulaText ? ' | ' : '') + '抵扣本金: ' + f.repayPrin;
+    if (f.cumulInt) formulaText += (formulaText ? ' | ' : '') + '累计利息: ' + f.cumulInt;
+
+    data.push([
+      i + 1,
+      r.payer || '', r.payee || '', r.bankCard || '',
+      r.startDate.toISOString().slice(0,10),
+      r.endDate.toISOString().slice(0,10),
+      r.startDate.toISOString().slice(0,10),
+      r.endDate.toISOString().slice(0,10),
+      r.days,
+      Math.round(r.startPrincipal * 100) / 100,
+      Math.round(r.periodContractInterest * 100) / 100,
+      Math.round(r.periodOverdueInterest * 100) / 100,
+      Math.round(r.periodInterest * 100) / 100,
+      r.repayAmount > 0 ? Math.round(r.repayAmount * 100) / 100 : '',
+      r.repayInterest > 0 ? Math.round(r.repayInterest * 100) / 100 : '',
+      r.repayPrincipal > 0 ? Math.round(r.repayPrincipal * 100) / 100 : '',
+      r.newLoanAmount > 0 ? Math.round(r.newLoanAmount * 100) / 100 : '',
+      Math.round(r.cumulativeInterestAfter * 100) / 100,
+      Math.round(r.endingPrincipal * 100) / 100,
+      (() => { const idx = r.eventDescription.indexOf('· '); return idx >= 0 ? r.eventDescription.slice(idx + 2) : ''; })(),
+      formulaText,
+    ]);
+  });
+
+  // Summary rows
+  data.push([]);
+  data.push(['汇总']);
+  data.push(['累计出借本金', Math.round(summary.totalPrincipal * 100) / 100]);
+  data.push(['剩余未还本金', Math.round(summary.endingPrincipal * 100) / 100]);
+  data.push(['累计应付利息', Math.round(summary.cumulativeInterest * 100) / 100]);
+  data.push(['其中合同利息', Math.round(summary.totalContractInterest * 100) / 100]);
+  data.push(['其中逾期利息', Math.round(summary.totalOverdueInterest * 100) / 100]);
+  data.push(['已收回总额', Math.round((summary.totalPrincipalPaid + summary.totalInterestPaid) * 100) / 100]);
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = headers.map((h, i) => {
+    if (i === 20) return { wch: 60 }; // formula column
+    if (i === 19) return { wch: 30 }; // description
+    return { wch: 14 };
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '本息计算明细');
+  XLSX.writeFile(wb, `本息计算_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('Excel 文件已下载（含计算公式列）');
+}
+
+function copyResultTable() {
+  const range = document.createRange();
+  range.selectNodeContents(document.getElementById('resultTable'));
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  document.execCommand('copy'); sel.removeAllRanges();
+  showToast('表格已复制到剪贴板，可直接粘贴到 Excel');
+}
+
+function clearAll() {
+  if (!confirm('确定要清空所有数据和结果吗？')) return;
+  loans = []; repayments = []; loanCounter = 0; repayCounter = 0; lastCalcResults = null;
+  renderLoanTable(); renderRepayTable();
+  document.getElementById('results').style.display = 'none';
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  showToast('已清空全部数据');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg; toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ========== STARTUP ==========
+init();
+renderLoanTable();
+renderRepayTable();
+</script>
+</body>
+</html>

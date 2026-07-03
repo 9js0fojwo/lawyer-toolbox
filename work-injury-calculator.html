@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>广东省工伤保险赔偿计算器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f0f2f5; color: #333; line-height: 1.6; }
+.container { max-width: 960px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 24px; }
+.header h1 { font-size: 26px; margin-bottom: 8px; }
+.header p { opacity: 0.85; font-size: 14px; }
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.card h2 { font-size: 18px; border-left: 4px solid #2980b9; padding-left: 12px; margin-bottom: 16px; color: #1a5276; }
+.form-row { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.form-group { flex: 1; min-width: 180px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.form-group select, .form-group input { width: 100%; padding: 8px 12px; border: 1px solid #d0d5dd; border-radius: 6px; font-size: 14px; background: #fafbfc; transition: border-color 0.2s; }
+.form-group select:focus, .form-group input:focus { outline: none; border-color: #2980b9; box-shadow: 0 0 0 3px rgba(41,128,185,0.1); }
+.form-group .unit { font-size: 12px; color: #999; margin-top: 2px; }
+.form-group .hint { font-size: 11px; color: #e67e22; margin-top: 2px; }
+.btn-primary { width: 100%; padding: 12px; background: linear-gradient(135deg, #1a5276, #2980b9); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; margin-top: 8px; }
+.btn-primary:hover { opacity: 0.9; }
+.result-section { display: none; }
+.result-section.show { display: block; }
+.result-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 14px; }
+.result-table th { background: #1a5276; color: #fff; padding: 10px 12px; text-align: left; font-size: 13px; }
+.result-table td { padding: 10px 12px; border-bottom: 1px solid #e8ecf0; }
+.result-table tr:nth-child(even) td { background: #f8f9fb; }
+.result-table .total-row td { font-weight: 700; font-size: 16px; background: #eaf2f8 !important; border-top: 2px solid #2980b9; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.tag-fund { background: #d4efdf; color: #1e8449; font-size: 12px; padding: 3px 10px; }
+.tag-company { background: #fadbd8; color: #c0392b; font-size: 12px; padding: 3px 10px; }
+.tag-both { background: #fcf3cf; color: #b7950b; font-size: 12px; padding: 3px 10px; }
+.payer-legend { display: flex; gap: 20px; justify-content: center; font-size: 12px; color: #888; margin-top: 8px; flex-wrap: wrap; }
+.payer-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.summary-box { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.summary-item { flex: 1; min-width: 180px; padding: 16px; border-radius: 8px; text-align: center; }
+.summary-item.fund { background: #d4efdf; }
+.summary-item.company { background: #fadbd8; }
+.summary-item.total { background: #eaf2f8; }
+.summary-item .amount { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.summary-item .label { font-size: 12px; color: #666; }
+.law-ref { font-size: 12px; color: #888; margin-top: 12px; padding: 12px; background: #f8f9fb; border-radius: 8px; border-left: 3px solid #bdc3c7; }
+.law-ref strong { color: #555; }
+.warning { background: #fef9e7; border-left: 4px solid #f39c12; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+.warning strong { color: #e67e22; }
+.info-warning { background: #fdedec; border-left: 4px solid #e74c3c; padding: 12px 16px; border-radius: 6px; font-size: 13px; margin-bottom: 16px; }
+.info-warning strong { color: #c0392b; }
+.expense-payer { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+.expense-payer-fund { background: #d4efdf; color: #1e8449; }
+.expense-payer-company { background: #fadbd8; color: #c0392b; }
+.expense-payer-fund-uninsured { background: #fadbd8; color: #c0392b; }
+.info-row { display: flex; justify-content: space-between; font-size: 13px; color: #666; padding: 4px 0; }
+.info-row span:last-child { font-weight: 600; color: #333; }
+.fieldset-box { background: #f8fafc; border: 1.5px solid #d0dce8; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+.fieldset-box .fieldset-title { font-size: 14px; font-weight: 700; color: #1a5276; margin-bottom: 12px; }
+.fieldset-box-construction { background: #fef9e7; border: 1.5px solid #f0d78c; }
+.fieldset-box-construction .fieldset-title { color: #8a6d14; }
+.daily-wage-box { background: #eaf7ea; border: 1.5px solid #a9dfbf; border-radius: 8px; padding: 12px 16px; margin-top: 8px; display: none; }
+.daily-wage-box .formula { font-size: 13px; color: #1e8449; font-weight: 600; }
+.key-point { display: inline-block; background: #fef9e7; border: 1px solid #f0d78c; border-radius: 4px; padding: 2px 8px; font-size: 12px; color: #8a6d14; font-weight: 600; margin-left: 4px; }
+</style>
+<script src="https://beacon.cdn.qq.com/sdk/4.5.9/beacon_web.min.js"></script>
+<script>
+(function(){
+  try{
+    var beacon=new BeaconAction({
+      appkey:'0WEB06U85YBSLJNL',
+      versionCode:'2.0.0',
+      channelID:'share',
+      delay:1000,
+      sessionDuration:30*60*1000,
+      isOversea:false,
+      needReportRqdEvent:false
+    });
+    beacon.onDirectUserAction('preview_page_view',{
+      'url':location.href,
+      'referrer':document.referrer,
+      'title':document.title,
+      'sandbox_id':'467d6e96d808467a95a9477a359cc30a'
+    });
+  }catch(e){}
+})();
+</script></head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>🛡️ 广东省工伤保险赔偿计算器</h1>
+  <p>依据《工伤保险条例》《广东省工伤保险条例》及人社部发〔2014〕103号 | 2026年度最新标准</p>
+</div>
+
+<!-- Input Card -->
+<div class="card">
+  <h2>📋 基本信息填写</h2>
+
+  <!-- 伤残/工亡切换（保持原有） -->
+  <div class="form-row">
+    <div class="form-group" style="flex:0 0 100%">
+      <label>赔偿类型</label>
+      <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;border:1.5px solid #d0dce8">
+        <div id="tabInjury" style="flex:1;text-align:center;padding:10px;background:#1a5276;color:#fff;font-weight:600;cursor:pointer;font-size:14px" onclick="switchMode('injury')">🩼 残疾赔偿</div>
+        <div id="tabDeath" style="flex:1;text-align:center;padding:10px;background:#f8fafc;color:#555;font-weight:600;cursor:pointer;font-size:14px" onclick="switchMode('death')">⚰️ 工亡赔偿</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>工伤所在地市 *</label>
+      <select id="city" onchange="onCityOrWorkerChange()">
+        <option value="guangzhou">广州市（月均工资 13,704 元）</option>
+        <option value="shenzhen">深圳市（月均工资 14,755 元）</option>
+        <option value="zhuhai">珠海市（月均工资 11,642 元）</option>
+        <option value="other" selected>广东省其他市（月均工资 11,456 元）</option>
+      </select>
+    </div>
+    <div class="form-group" id="gradeGroup">
+      <label>伤残等级 *</label>
+      <select id="grade">
+        <option value="1">一级伤残</option>
+        <option value="2">二级伤残</option>
+        <option value="3">三级伤残</option>
+        <option value="4">四级伤残</option>
+        <option value="5">五级伤残</option>
+        <option value="6">六级伤残</option>
+        <option value="7">七级伤残</option>
+        <option value="8">八级伤残</option>
+        <option value="9">九级伤残</option>
+        <option value="10" selected>十级伤残</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ★★★ 新增：用工形式（核心改动） ★★★ -->
+  <div class="fieldset-box" id="workerTypeBox">
+    <div class="fieldset-title">👷 用工形式 <span class="key-point">⚠️ 影响工资基数核定规则</span></div>
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 100%">
+        <select id="workerType" onchange="onWorkerTypeChange()">
+          <option value="regular" selected>🏢 普通企业职工（按月薪制，适用60%-300%封顶保底）</option>
+          <option value="construction">🏗️ 建筑工地工人（按项目参保 / 按日计薪，工资难以核定时按100%社平工资）</option>
+        </select>
+        <div class="unit" id="workerTypeNote" style="color:#2980b9">
+          普通企业职工：本人工资低于市月均工资60%按60%、高于300%按300%计算（《工伤保险条例》第64条）
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 👤 职工身份信息（含退休年龄） -->
+  <div class="fieldset-box">
+    <div class="fieldset-title">👤 职工身份信息（含退休年龄自动计算）</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>性别 / 岗位类别 *</label>
+        <select id="gender" onchange="updateRetireDisplay()">
+          <option value="male" selected>男职工（原60→63岁退休）</option>
+          <option value="femaleWorker">女工人（原50→55岁退休）</option>
+          <option value="femaleCadre">女干部/管理技术岗（原55→58岁退休）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>出生年月 *</label>
+        <div style="display:flex;gap:8px">
+          <input type="number" id="birthYear" value="1991" min="1960" max="2015" step="1" style="flex:1" placeholder="年份" onchange="updateRetireDisplay()" oninput="updateRetireDisplay()">
+          <input type="number" id="birthMonth" value="6" min="1" max="12" step="1" style="flex:0.8" placeholder="月份" onchange="updateRetireDisplay()" oninput="updateRetireDisplay()">
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px dashed #d0dce8">
+      <div style="flex:1;min-width:140px;text-align:center;padding:8px 12px;background:#fff;border-radius:8px;border:1px solid #e8ecf0">
+        <div style="font-size:11px;color:#888">当前年龄</div>
+        <div style="font-size:18px;font-weight:700;color:#333" id="infoCurrentAge">—</div>
+      </div>
+      <div style="font-size:20px;color:#ccc">→</div>
+      <div style="flex:1;min-width:160px;text-align:center;padding:10px 14px;background:#fef9e7;border-radius:8px;border:1.5px solid #f0d78c">
+        <div style="font-size:11px;color:#8a6d14">法定退休年龄（2025新政）</div>
+        <div style="font-size:22px;font-weight:800;color:#c0392b" id="infoRetireAge">—</div>
+        <div style="font-size:11px;color:#8a6d14;margin-top:2px" id="infoRetireDetail"></div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-top:6px;text-align:center" id="retirePolicy"></div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group" id="resignedGroup">
+      <label>是否已与单位解除/终止劳动关系</label>
+      <select id="resigned">
+        <option value="no" selected>否（仍在职）</option>
+        <option value="yes">是（已离职/合同终止）</option>
+      </select>
+      <div class="unit">5-10级离职后方可申领两笔补助金</div>
+    </div>
+    <div class="form-group" id="careGroup">
+      <label>生活自理障碍等级</label>
+      <select id="careLevel">
+        <option value="none" selected>无需护理 / 未鉴定</option>
+        <option value="1">一级护理（完全不能自理）</option>
+        <option value="2">二级护理（大部分不能自理）</option>
+        <option value="3">三级护理（部分不能自理）</option>
+        <option value="4">四级护理（轻度不能自理）</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ★★★ 工资计算区域（重构） ★★★ -->
+  <div class="fieldset-box">
+    <div class="fieldset-title">💰 工资基数确定 <span class="key-point">核心参数</span></div>
+
+    <!-- 工资输入模式（新增） -->
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 100%">
+        <label>工资输入模式</label>
+        <select id="wageInputMode" onchange="onWageInputModeChange()">
+          <option value="monthly" selected>📅 按月工资输入（标准月薪制）</option>
+          <option value="daily">📆 按日工资输入（系统自动折算为月工资：×21.75天）</option>
+        </select>
+        <div class="unit" id="wageModeNote">标准月薪制：直接输入月工资金额</div>
+      </div>
+    </div>
+
+    <!-- 日工资输入区（默认隐藏） -->
+    <div class="daily-wage-box" id="dailyWageBox">
+      <div class="form-row">
+        <div class="form-group">
+          <label>日工资金额 *</label>
+          <input type="number" id="dailyWage" value="300" min="0" step="10" placeholder="如 300" oninput="onDailyWageInput()">
+          <div class="unit">元/天 — 实际工作日工资（税前）</div>
+        </div>
+        <div class="form-group">
+          <label>实际工作天数（用于确认）</label>
+          <input type="number" id="actualWorkDays" value="22" min="1" max="31" step="0.5" placeholder="如 22">
+          <div class="unit">天 — 受伤前实际出勤天数（用于确认月工资合理性）</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:8px;background:#fff;border-radius:6px;margin-bottom:8px">
+        <span class="formula">📐 月工资 = 日工资 × 21.75天（法定月计薪天数，依据劳社部发〔2008〕3号）</span>
+        <br><span style="font-size:13px;color:#1e8449;font-weight:700" id="dailyToMonthlyPreview">折算月工资：—</span>
+        <br><span style="font-size:11px;color:#888">⚠️ 注意：不是×30天！法定月计薪天数 = (365−104)÷12 = 21.75天</span>
+      </div>
+    </div>
+
+    <!-- 工资计算依据 -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>工资计算依据</label>
+        <select id="salaryBasis" onchange="onSalaryBasisChange()">
+          <option value="avg12" selected>工伤前12个月平均工资（正常计算）</option>
+          <option value="shortTerm">入职不足12个月，按实际工作月数平均</option>
+          <option value="lessThanMonth">入职不足1个月，按合同/同岗位/社平工资确定</option>
+          <option value="contract">按劳动合同约定的月工资</option>
+          <option value="insuranceBase">无法确定——按社保缴费工资基数</option>
+          <option value="cityFloor">无法确定且未参保——按市月均工资60%</option>
+        </select>
+        <div class="unit" id="salaryBasisNote" style="color:#2980b9">正常按工伤前12个月实际工资的算术平均值计算</div>
+      </div>
+      <div class="form-group">
+        <label>月工资金额（税前）* <span class="key-point">「本人工资」</span></label>
+        <input type="number" id="salary" value="8000" min="0" step="100">
+        <div class="unit">元/月 — 即《工伤保险条例》第64条中的「本人工资」</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>单位是否购买工伤保险 *</label>
+        <select id="insured" onchange="toggleInsuranceFields()">
+          <option value="yes" selected>✅ 已参保</option>
+          <option value="no">❌ 未参保</option>
+        </select>
+        <div class="unit" id="insuredNote">未参保 → 全部由单位承担</div>
+      </div>
+      <div class="form-group" id="baseGroup">
+        <label>社保缴费工资基数</label>
+        <input type="number" id="insuranceBase" value="8000" min="0" step="100">
+        <div class="unit">元/月 — 可能与实际工资不同</div>
+      </div>
+    </div>
+
+    <!-- ★★★ 工资基数说明（动态更新） ★★★ -->
+    <div id="wageInfoBox" style="font-size:12px;color:#555;margin-top:8px;padding:10px 14px;background:#f0f7ff;border-radius:6px;border-left:3px solid #2980b9;display:none">
+      <strong>📌 工资基数核定说明：</strong><span id="wageInfoText"></span>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group" id="leaveGroup">
+      <label>停工留薪期</label>
+      <input type="number" id="leaveMonths" value="3" min="0" max="24" step="0.5">
+      <div class="unit">月（最长24个月，支持小数如 2.5 个月）</div>
+    </div>
+    <div class="form-group">
+      <label>住院天数</label>
+      <input type="number" id="hospitalDays" value="15" min="0" max="365" step="1">
+      <div class="unit">天（计算伙食补助费）</div>
+    </div>
+  </div>
+
+  <!-- 各项实际费用（选填） -->
+  <div style="background:#fafbfc; border:1.5px solid #d0dce8; border-radius:10px; padding:16px 20px; margin-top:12px">
+    <div style="font-size:14px;font-weight:700;color:#1a5276;margin-bottom:12px">
+      💊 各项实际费用（选填）<span style="font-size:12px;color:#888;font-weight:400;margin-left:8px">— 金额由使用人根据实际发票/凭证自行填写</span>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>🏥 医疗费 <span class="expense-payer expense-payer-fund" data-expense-id="expMedical">（社保基金支付）</span></label>
+        <input type="number" id="expMedical" value="" min="0" step="100" placeholder="请填写实际医疗费总额">
+        <div class="unit">元 — 诊疗/药品/住院等（工伤保险目录内）</div>
+      </div>
+      <div class="form-group">
+        <label>🩺 停工留薪期护理费 <span class="expense-payer expense-payer-company" data-expense-id="expNursingLeave">（用人单位承担）</span></label>
+        <input type="number" id="expNursingLeave" value="" min="0" step="100" placeholder="请填写护理费金额">
+        <div class="unit">元 — 单位未派人护理时应折算支付（《条例》第25条）</div>
+      </div>
+      <div class="form-group">
+        <label>🚗 交通费 <span class="expense-payer expense-payer-fund" data-expense-id="expTransport">（社保基金支付）</span></label>
+        <input type="number" id="expTransport" value="" min="0" step="10" placeholder="请填写交通费金额">
+        <div class="unit">元 — 就医/转院的往返交通费（凭票据）</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>🏨 住宿费 <span class="expense-payer expense-payer-fund" data-expense-id="expLodging">（社保基金支付）</span></label>
+        <input type="number" id="expLodging" value="" min="0" step="10" placeholder="请填写住宿费金额">
+        <div class="unit">元 — 经批准转外地治疗的住宿费（凭票据）</div>
+      </div>
+      <div class="form-group">
+        <label>💪 工伤康复费 <span class="expense-payer expense-payer-fund" data-expense-id="expRehab">（社保基金支付）</span></label>
+        <input type="number" id="expRehab" value="" min="0" step="100" placeholder="请填写康复治疗费用">
+        <div class="unit">元 — 工伤康复机构出具的康复费用</div>
+      </div>
+      <div class="form-group">
+        <label>🦽 残疾辅助器具费 <span class="expense-payer expense-payer-fund" data-expense-id="expAssistive">（社保基金支付）</span></label>
+        <input type="number" id="expAssistive" value="" min="0" step="100" placeholder="请填写辅助器具费用">
+        <div class="unit">元 — 经确认需配置的辅助器具费（假肢/轮椅等）</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>📋 其他费用 <span class="expense-payer expense-payer-fund" data-expense-id="expOther">（社保基金支付）</span></label>
+        <input type="number" id="expOther" value="" min="0" step="10" placeholder="请填写其他合理费用">
+        <div class="unit">元 — 经劳动能力鉴定委员会确认的其他费用</div>
+      </div>
+      <div class="form-group">
+        <label>📋 其他用人单位承担项目 <span class="expense-payer expense-payer-company" data-expense-id="expOtherCompany">（用人单位承担）</span></label>
+        <input type="number" id="expOtherCompany" value="" min="0" step="10" placeholder="请填写金额">
+        <div class="unit">元 — 如单位承诺承担的其他合理费用</div>
+      </div>
+      <div class="form-group"></div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 12px;background:#fff;border-radius:6px;border-left:3px solid #2980b9">
+      <strong>💰 费用承担规则：</strong>
+      <span style="color:#1e8449">■ 社保基金支付</span> = 已参保则由工伤保险基金报销；未参保则转由<strong style="color:#c0392b">用人单位全额承担</strong>。
+      <span style="color:#c0392b">■ 用人单位承担</span> = 停工留薪期护理费（单位派人护理则不产生此项）；其他单位承诺承担的费用。
+    </div>
+  </div>
+
+  <!-- 工亡特有字段 -->
+  <div id="deathFields" style="display:none">
+    <div style="background:#fdf2f2; border:1.5px solid #f5c6cb; border-radius:10px; padding:16px 20px; margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:#c0392b;margin-bottom:12px">👨‍👩‍👧 供养亲属信息（工亡）</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px">配偶按本人工资40%、其他亲属30%、孤寡老人/孤儿加10%。各亲属抚恤金之和≤生前工资。</div>
+      <div id="dependentsList"></div>
+      <button type="button" onclick="addDependent()" style="padding:6px 16px;background:#fff;border:1.5px dashed #c0392b;border-radius:6px;color:#c0392b;cursor:pointer;font-size:13px;font-weight:600">+ 添加供养亲属</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>上一年度全国城镇居民人均可支配收入</label>
+        <input type="number" id="nationalIncome" value="56502" min="0" step="1">
+        <div class="unit">元/年 — 2025年度数据为 56,502元（2026年一次性工亡补助金 = 56,502 × 20 = 1,130,040元）</div>
+      </div>
+      <div class="form-group"></div>
+      <div class="form-group"></div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="calculate()">🔍 计算赔偿金额</button>
+</div>
+
+<!-- Result Section -->
+<div class="result-section" id="resultSection">
+  <div class="card">
+    <h2>📊 计算基础参数</h2>
+    <div class="info-row"><span>用工形式</span><span id="infoWorkerType">—</span></div>
+    <div class="info-row"><span>所在城市职工月平均工资</span><span id="infoCityWage">—</span></div>
+    <div class="info-row"><span>工资计算依据</span><span id="infoSalaryBasis">—</span></div>
+    <div class="info-row"><span>工资核定规则</span><span id="infoWageRule">—</span></div>
+    <div class="info-row"><span>「本人工资」计算基数</span><span id="infoBaseSalary">—</span></div>
+    <div class="info-row"><span>社保缴费基数</span><span id="infoInsBase">—</span></div>
+    <div class="info-row"><span>距法定退休年龄</span><span id="infoRetire">—</span></div>
+    <div class="info-row" id="infoDecrementRow" style="display:none"><span>一次性伤残就业补助金递减比例</span><span id="infoDecrement">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>💰 赔偿明细</h2>
+    <div class="warning" id="uninsuredWarning" style="display:none">
+      <strong>⚠️ 单位未参保</strong>：以下所有«工伤保险基金支付»的项目均由<strong>用人单位全额承担</strong>。
+    </div>
+    <div class="info-warning" id="constructionWageWarning" style="display:none">
+      <strong>🏗️ 建筑工人工资核定提示</strong>：因工资难以核定，按<strong>100%市月均工资</strong>作为本人工资基数（依据人社部发〔2014〕103号第七条），而非普通职工的60%。若您能提供实际工资证明，请切换为"按月工资输入"并填写实际月工资。
+    </div>
+    <table class="result-table" id="resultTable">
+      <thead><tr><th>赔偿项目</th><th>计算方式</th><th style="text-align:right">金额（元）</th><th style="text-align:center">支付方</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="summary-box">
+    <div class="summary-item fund">
+      <div class="label">社保基金应赔付</div>
+      <div class="amount" id="sumFund">¥0</div>
+      <div class="label" style="margin-top:4px" id="sumFundNote"></div>
+    </div>
+    <div class="summary-item company">
+      <div class="label">用人单位应赔付</div>
+      <div class="amount" id="sumCompany">¥0</div>
+      <div class="label" style="margin-top:4px" id="sumCompanyNote"></div>
+    </div>
+    <div class="summary-item total">
+      <div class="label">合计赔偿总额</div>
+      <div class="amount" id="sumTotal">¥0</div>
+    </div>
+  </div>
+
+  <div class="payer-legend">
+    <span><span class="tag tag-fund">社保基金</span> = 工伤保险基金支付（前提：单位已参保）</span>
+    <span><span class="tag tag-company">用人单位</span> = 由单位自行承担</span>
+  </div>
+  <div style="font-size:12px;color:#888;text-align:center;margin-top:4px">
+    ⚠️ 一次性伤残就业补助金<strong>永远</strong>由用人单位支付，社保基金不承担该项。
+  </div>
+
+  <div class="law-ref" id="lawRef"></div>
+</div>
+
+</div>
+
+<script>
+// ==================== DATA ====================
+
+// City wage data (2024 urban non-private sector avg monthly wage)
+const CITY_DATA = {
+  guangzhou: { name: '广州市', monthlyWage: 13704 },
+  shenzhen:  { name: '深圳市', monthlyWage: 14755 },
+  zhuhai:    { name: '珠海市', monthlyWage: 11642 },
+  other:     { name: '广东省其他市', monthlyWage: 11456 }
+};
+
+// Disability grade data
+const GRADE_DATA = {
+  1:  { name:'一级伤残', disability:27, medical:0,  employment:0,  allowance:0.90, allowanceNote:'基金支付90%' },
+  2:  { name:'二级伤残', disability:25, medical:0,  employment:0,  allowance:0.85, allowanceNote:'基金支付85%' },
+  3:  { name:'三级伤残', disability:23, medical:0,  employment:0,  allowance:0.80, allowanceNote:'基金支付80%' },
+  4:  { name:'四级伤残', disability:21, medical:0,  employment:0,  allowance:0.75, allowanceNote:'基金支付75%' },
+  5:  { name:'五级伤残', disability:18, medical:10, employment:50, allowance:0.70, allowanceNote:'单位支付70%（难以安排工作时）' },
+  6:  { name:'六级伤残', disability:16, medical:8,  employment:40, allowance:0.60, allowanceNote:'单位支付60%（难以安排工作时）' },
+  7:  { name:'七级伤残', disability:13, medical:6,  employment:25, allowance:0,    allowanceNote:'' },
+  8:  { name:'八级伤残', disability:11, medical:4,  employment:15, allowance:0,    allowanceNote:'' },
+  9:  { name:'九级伤残', disability:9,  medical:2,  employment:8,  allowance:0,    allowanceNote:'' },
+  10: { name:'十级伤残', disability:7,  medical:1,  employment:4,  allowance:0,    allowanceNote:'' }
+};
+
+// Care level data (% of city monthly wage)
+const CARE_DATA = {
+  none: { name:'无需护理', ratio:0 },
+  1:    { name:'一级护理（完全不能自理）', ratio:0.60 },
+  2:    { name:'二级护理（大部分不能自理）', ratio:0.50 },
+  3:    { name:'三级护理（部分不能自理）',   ratio:0.40 },
+  4:    { name:'四级护理（轻度不能自理）', ratio:0.30 }
+};
+
+// ★ 法定月计薪天数
+const LEGAL_PAY_DAYS = 21.75;
+
+// Constants
+const MEAL_ALLOWANCE_PER_DAY = 100;
+
+// ==================== UI HELPERS ====================
+
+function fmt(n) {
+  if (isNaN(n) || n === Infinity || n === -Infinity) return '—';
+  return '¥' + Math.round(n).toLocaleString('zh-CN');
+}
+
+// ==================== WORKER TYPE CHANGE ★ ====================
+
+function onWorkerTypeChange() {
+  const wt = document.getElementById('workerType').value;
+  const note = document.getElementById('workerTypeNote');
+  const salaryBasis = document.getElementById('salaryBasis');
+  const wageInfoBox = document.getElementById('wageInfoBox');
+
+  if (wt === 'construction') {
+    note.innerHTML = '<span style="color:#8a6d14;font-weight:600">🏗️ 建筑工地工人（按项目参保）：工资难以核定时，按<strong>100%市月均工资</strong>作为基数（人社部发〔2014〕103号第7条），<u>不适用60%下限</u></span>';
+    // Show wage info box
+    if (wageInfoBox) wageInfoBox.style.display = 'block';
+    updateWageInfoBox();
+  } else {
+    note.innerHTML = '普通企业职工：本人工资低于市月均工资60%按60%、高于300%按300%计算（《工伤保险条例》第64条）';
+    if (wageInfoBox) wageInfoBox.style.display = 'none';
+  }
+
+  onCityOrWorkerChange();
+}
+
+function onCityOrWorkerChange() {
+  onSalaryBasisChange();
+  updateWageInfoBox();
+}
+
+// ★ 日工资折算预览
+function onDailyWageInput() {
+  const dailyWage = parseFloat(document.getElementById('dailyWage').value) || 0;
+  const monthlyEquivalent = Math.round(dailyWage * LEGAL_PAY_DAYS);
+  document.getElementById('dailyToMonthlyPreview').textContent =
+    `折算月工资：${dailyWage}元/天 × 21.75天 = ${monthlyEquivalent.toLocaleString()}元/月`;
+  // Sync to salary field
+  if (document.getElementById('wageInputMode').value === 'daily' && dailyWage > 0) {
+    document.getElementById('salary').value = monthlyEquivalent;
+    document.getElementById('salary').style.background = '#eaf7ea';
+  }
+}
+
+// ★ 工资输入模式切换
+function onWageInputModeChange() {
+  const mode = document.getElementById('wageInputMode').value;
+  const dailyBox = document.getElementById('dailyWageBox');
+  const salaryInput = document.getElementById('salary');
+  const wageModeNote = document.getElementById('wageModeNote');
+
+  if (mode === 'daily') {
+    dailyBox.style.display = 'block';
+    salaryInput.style.background = '#eaf7ea';
+    salaryInput.readOnly = true;
+    wageModeNote.innerHTML = '<span style="color:#1e8449;font-weight:600">📆 日工资模式：系统自动按 日工资×21.75天 折算月工资（法定月计薪天数）</span>';
+    onDailyWageInput();
+  } else {
+    dailyBox.style.display = 'none';
+    salaryInput.style.background = '#fafbfc';
+    salaryInput.readOnly = false;
+    wageModeNote.textContent = '标准月薪制：直接输入月工资金额';
+  }
+  updateWageInfoBox();
+}
+
+// ★ 工资基数说明动态更新
+function updateWageInfoBox() {
+  const box = document.getElementById('wageInfoBox');
+  const text = document.getElementById('wageInfoText');
+  const wt = document.getElementById('workerType').value;
+  const cityKey = document.getElementById('city').value;
+  const cityWage = CITY_DATA[cityKey].monthlyWage;
+  const mode = document.getElementById('wageInputMode').value;
+
+  if (wt !== 'construction' && mode !== 'daily') {
+    box.style.display = 'none';
+    return;
+  }
+
+  box.style.display = 'block';
+  let info = '';
+
+  if (wt === 'construction') {
+    info += `<br>• 🏗️ <strong>建筑工人特殊规则</strong>：按项目参保的建筑工人，如工资难以核定（按日计薪、无固定月薪、现金发放等），依据<strong>人社部发〔2014〕103号第7条</strong>，按<strong>100%市月均工资（${cityWage.toLocaleString()}元/月）</strong>作为本人工资基数，而非普通职工的60%下限。`;
+    info += `<br>• 如建筑工人能提供明确的工资证明（劳动合同月薪/银行流水等），则按实际工资适用60%-300%封顶保底规则。`;
+  }
+
+  if (mode === 'daily') {
+    info += `<br>• 📐 <strong>日工资折算规则</strong>：月工资 = 日工资 × <strong>21.75天</strong>（法定月计薪天数，《关于职工全年月平均工作时间和工资折算问题的通知》劳社部发〔2008〕3号），<u>不是×30天</u>。`;
+    info += `<br>• 30天是自然月天数，包含休息日；21.75天 = (365−104休息日)÷12，是法定计薪天数。`;
+  }
+
+  text.innerHTML = info;
+}
+
+// ==================== INSURANCE TOGGLE ====================
+
+function toggleInsuranceFields() {
+  const insured = document.getElementById('insured').value;
+  const baseGroup = document.getElementById('baseGroup');
+  const note = document.getElementById('insuredNote');
+  if (insured === 'no') {
+    baseGroup.style.opacity = '0.5';
+    note.innerHTML = '<span style="color:#c0392b;font-weight:600">⚠️ 未参保 → 全部赔偿由用人单位承担</span>';
+  } else {
+    baseGroup.style.opacity = '1';
+    note.innerHTML = '社保基金按缴费基数核定待遇，差额由单位补足';
+  }
+  updateExpensePayers();
+}
+
+function updateExpensePayers() {
+  const insured = document.getElementById('insured').value;
+  const allPayers = document.querySelectorAll('.expense-payer');
+  allPayers.forEach(el => {
+    const isFundPayer = el.classList.contains('expense-payer-fund');
+    if (insured === 'no' && isFundPayer) {
+      el.textContent = '（用人单位承担）';
+      el.classList.remove('expense-payer-fund');
+      el.classList.add('expense-payer-fund-uninsured');
+    } else if (insured === 'yes' && el.classList.contains('expense-payer-fund-uninsured')) {
+      el.classList.remove('expense-payer-fund-uninsured');
+      el.classList.add('expense-payer-fund');
+      const origTexts = {
+        'expMedical': '（社保基金支付）',
+        'expTransport': '（社保基金支付）',
+        'expLodging': '（社保基金支付）',
+        'expRehab': '（社保基金支付）',
+        'expAssistive': '（社保基金支付）',
+        'expOther': '（社保基金支付）'
+      };
+      const expId = el.getAttribute('data-expense-id');
+      if (origTexts[expId]) el.textContent = origTexts[expId];
+    }
+  });
+}
+
+// ==================== SALARY BASIS CHANGE ====================
+
+function onSalaryBasisChange() {
+  const basis = document.getElementById('salaryBasis').value;
+  const salaryInput = document.getElementById('salary');
+  const note = document.getElementById('salaryBasisNote');
+  const cityKey = document.getElementById('city').value;
+  const cityWage = CITY_DATA[cityKey].monthlyWage;
+  const workerType = document.getElementById('workerType').value;
+  const wageMode = document.getElementById('wageInputMode').value;
+
+  // Reset styling
+  salaryInput.style.background = '#fafbfc';
+  salaryInput.readOnly = false;
+
+  switch (basis) {
+    case 'avg12':
+      salaryInput.placeholder = '如 8000';
+      note.innerHTML = '工伤前12个月实际工资的算术平均值（《工伤保险条例》第64条）';
+      note.style.color = '#2980b9';
+      break;
+    case 'shortTerm':
+      salaryInput.placeholder = '如 8000';
+      note.innerHTML = '以实际工作月数的平均工资为准。如某月不足整月，先折算：不足月工资÷实际工作天数×21.75天 → 再参与月均计算';
+      note.style.color = '#2980b9';
+      break;
+    case 'lessThanMonth':
+      const contractWage = parseFloat(document.getElementById('salary').value) || 0;
+      if (wageMode === 'daily') {
+        // For daily wage workers, use daily wage × 21.75
+        onDailyWageInput();
+        note.innerHTML = `📆 按日工资${document.getElementById('dailyWage').value || '—'}元×21.75天折算月工资；如无法确定则参照市月均工资100%（${cityWage.toLocaleString()}元）`;
+      } else if (workerType === 'construction') {
+        salaryInput.value = cityWage;  // 100% city avg for construction workers
+        salaryInput.style.background = '#fef9e7';
+        salaryInput.readOnly = true;
+        note.innerHTML = `🏗️ 建筑工人入职不足1个月，工资难以核定 → <strong>按100%市月均工资 ${cityWage.toLocaleString()}元/月</strong>（人社部发〔2014〕103号第7条）`;
+      } else {
+        salaryInput.placeholder = `如 ${cityWage.toLocaleString()}`;
+        note.innerHTML = `优先按劳动合同约定；无约定按同岗位工资；仍无法确定→参照市月均工资100%（${cityWage.toLocaleString()}元）作为基数（非60%下限）`;
+      }
+      note.style.color = '#e67e22';
+      break;
+    case 'contract':
+      salaryInput.placeholder = '如 8000';
+      note.textContent = '按劳动合同约定的月工资（实践中常被采纳）';
+      note.style.color = '#2980b9';
+      break;
+    case 'insuranceBase':
+      const ib = parseFloat(document.getElementById('insuranceBase').value) || cityWage * 0.6;
+      salaryInput.value = Math.round(ib);
+      salaryInput.style.background = '#e8f0fe';
+      salaryInput.readOnly = true;
+      note.textContent = `⚠️ 已自动填入社保缴费基数 ${Math.round(ib).toLocaleString()} 元/月（《广东省工伤保险条例》第56条）`;
+      note.style.color = '#e67e22';
+      break;
+    case 'cityFloor':
+      if (workerType === 'construction') {
+        // ★ 建筑工人：100% 而非 60%
+        salaryInput.value = cityWage;
+        salaryInput.style.background = '#fef9e7';
+        salaryInput.readOnly = true;
+        note.innerHTML = `🏗️ <strong>建筑工人特殊规则</strong>：已自动填入<strong>100%市月均工资 ${cityWage.toLocaleString()} 元/月</strong>（人社部发〔2014〕103号第7条，非60%）`;
+        note.style.color = '#8a6d14';
+      } else {
+        const floor = Math.round(cityWage * 0.6);
+        salaryInput.value = floor;
+        salaryInput.style.background = '#fdecea';
+        salaryInput.readOnly = true;
+        note.textContent = `⚠️ 已自动填入市月均工资60%：${floor.toLocaleString()} 元/月（《工伤保险条例》第64条兜底规则）`;
+        note.style.color = '#c0392b';
+      }
+      break;
+  }
+
+  updateWageInfoBox();
+}
+
+// ==================== ★ CORE CALCULATION ★ ====================
+
+function calculate() {
+  onSalaryBasisChange();  // ensure salary is synced
+
+  const isDeath = (currentMode === 'death');
+  const cityKey = document.getElementById('city').value;
+  const gradeKey = isDeath ? 0 : parseInt(document.getElementById('grade').value);
+  const gender = document.getElementById('gender').value;
+  const birthYear = parseInt(document.getElementById('birthYear').value) || 1991;
+  const birthMonth = parseInt(document.getElementById('birthMonth').value) || 6;
+  const salary = parseFloat(document.getElementById('salary').value) || 0;
+  const insured = document.getElementById('insured').value;
+  const insuranceBase = parseFloat(document.getElementById('insuranceBase').value) || salary;
+  const resigned = document.getElementById('resigned').value;
+  const careKey = document.getElementById('careLevel').value;
+  const leaveMonths = parseFloat(document.getElementById('leaveMonths').value) || 0;
+  const hospitalDays = parseInt(document.getElementById('hospitalDays').value) || 0;
+  const workerType = document.getElementById('workerType').value;
+  const salaryBasisVal = document.getElementById('salaryBasis').value;
+  const wageMode = document.getElementById('wageInputMode').value;
+  const dailyWage = parseFloat(document.getElementById('dailyWage').value) || 0;
+
+  const city = CITY_DATA[cityKey];
+  const grade = isDeath ? { name:'工亡', disability:0, medical:0, employment:0, allowance:0, allowanceNote:'' } : GRADE_DATA[gradeKey];
+  const care = isDeath ? CARE_DATA['none'] : CARE_DATA[careKey];
+
+  const cityWage = city.monthlyWage;
+
+  // Calculate age
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  let ageYears = currentYear - birthYear;
+  let ageMonths = currentMonth - birthMonth;
+  if (ageMonths < 0) { ageYears--; ageMonths += 12; }
+  const ageExact = ageYears + ageMonths / 12;
+
+  // Progressive retirement age
+  const retireResult = calcRetireAgeStatic(birthYear, birthMonth, gender);
+  const retireAge = retireResult.finalAge;
+  const retireNote = (retireResult.policyMode === 'unaffected') ? `原${retireResult.originalAge}岁退休（不受延迟影响）`
+    : (retireResult.policyMode === 'capped') ? `原${retireResult.originalAge}→新${Math.round(retireResult.finalAge)}岁（延迟${Math.round(retireResult.delayMonths/12)}年封顶）`
+    : `原${retireResult.originalAge}岁→延迟${retireResult.delayMonths}个月`;
+  const yearsToRetire = Math.max(0, retireAge - ageExact);
+
+  // ★★★★★ 核心改动：本人工资的确定逻辑 ★★★★★
+  //
+  // 规则1（普通职工）：60%-300% 封顶保底（《工伤保险条例》第64条）
+  //   下限 = cityWage × 60%，上限 = cityWage × 300%
+  //
+  // 规则2（建筑工人+工资难以核定）：使用100% cityWage（人社部发〔2014〕103号第7条）
+  //   触发条件：workerType === 'construction' AND (salaryBasis 表明工资难以核定)
+  //
+  // 规则3（日工资模式）：日工资 × 21.75天 = 月工资（劳社部发〔2008〕3号）
+
+  const minBase60 = Math.round(cityWage * 0.6);
+  const maxBase300 = Math.round(cityWage * 3.0);
+
+  let baseSalary = salary;
+  let baseNote = '';
+  let wageRuleText = '';
+  let isConstructionHardToDetermine = false;
+
+  // ★ 判断是否为"建筑工人工资难以核定"情形
+  const hardToDetermineBases = ['cityFloor', 'lessThanMonth', 'insuranceBase'];
+  const hasDeterminableWage = (wageMode === 'daily' && dailyWage > 0) ||
+                                (salary > 0 && (salaryBasisVal === 'avg12' || salaryBasisVal === 'shortTerm' || salaryBasisVal === 'contract'));
+  if (workerType === 'construction' && hardToDetermineBases.includes(salaryBasisVal) && !hasDeterminableWage) {
+    isConstructionHardToDetermine = true;
+  }
+
+  if (isConstructionHardToDetermine) {
+    // ★ 建筑工人特殊规则：100% 市月均工资
+    baseSalary = cityWage;
+    baseNote = `🏗️ 建筑工人工资难以核定，按100%市月均工资`;
+    wageRuleText = `建筑工人特殊规则（人社部发〔2014〕103号第7条）：难以按本人工资作为计发基数的，参照市月均工资<strong>100%</strong>（${cityWage.toLocaleString()}元/月），<u>不适用60%下限</u>`;
+  } else {
+    // 普通规则：60%-300% 封顶保底
+    if (salary < minBase60 && salaryBasisVal !== 'cityFloor') {
+      baseSalary = minBase60;
+      baseNote = `低于下限(${minBase60.toLocaleString()})，按60%兜底`;
+      wageRuleText = `《工伤保险条例》第64条：本人工资低于市月均工资60%，按60%（${minBase60.toLocaleString()}元/月）计算`;
+    } else if (salary > maxBase300) {
+      baseSalary = maxBase300;
+      baseNote = `高于上限(${maxBase300.toLocaleString()})，按300%封顶`;
+      wageRuleText = `《工伤保险条例》第64条：本人工资高于市月均工资300%，按300%（${maxBase300.toLocaleString()}元/月）计算`;
+    } else if (salary >= minBase60 && salary <= maxBase300) {
+      baseNote = '按实际工资（在60%-300%区间内）';
+      wageRuleText = `《工伤保险条例》第64条：本人工资在60%-300%区间内，按实际工资（${salary.toLocaleString()}元/月）计算`;
+    } else if (salaryBasisVal === 'cityFloor' && workerType !== 'construction') {
+      // 普通职工 cityFloor 情况
+      baseSalary = minBase60;
+      baseNote = `无法确定，按60%兜底`;
+      wageRuleText = `《工伤保险条例》第64条兜底：本人工资无法确定，按市月均工资60%（${minBase60.toLocaleString()}元/月）`;
+    }
+  }
+
+  // ★ 日工资模式说明
+  if (wageMode === 'daily' && !isConstructionHardToDetermine) {
+    const monthlyFromDaily = Math.round(dailyWage * LEGAL_PAY_DAYS);
+    wageRuleText += `<br>📐 日工资折算：${dailyWage}元/天 × <strong>21.75天</strong>（法定月计薪天数）= ${monthlyFromDaily.toLocaleString()}元/月（<u>非×30天</u>，依据劳社部发〔2008〕3号）`;
+  }
+
+  const personalWage = baseSalary;
+
+  // Insurance base for fund calculations
+  let fundBaseSalary = insuranceBase;
+  if (fundBaseSalary < minBase60) fundBaseSalary = minBase60;
+  if (fundBaseSalary > maxBase300) fundBaseSalary = maxBase300;
+
+  // ---- Build results ----
+  let rows = [];
+  let fundTotal = 0;
+  let companyTotal = 0;
+
+  // Calculate decrement for 一次性伤残就业补助金
+  let employmentDecrement = 1.0;
+  let decrementNote = '';
+  if (yearsToRetire < 5 && grade.employment > 0) {
+    if (yearsToRetire >= 4)      { employmentDecrement = 1.0; decrementNote = '（距退休5年，全额）'; }
+    else if (yearsToRetire >= 3) { employmentDecrement = 0.8; decrementNote = '（距退休4年，80%）'; }
+    else if (yearsToRetire >= 2) { employmentDecrement = 0.6; decrementNote = '（距退休3年，60%）'; }
+    else if (yearsToRetire >= 1) { employmentDecrement = 0.4; decrementNote = '（距退休2年，40%）'; }
+    else if (yearsToRetire > 0)  { employmentDecrement = 0.1; decrementNote = '（距退休不足1年，10%）'; }
+    else                         { employmentDecrement = 0;   decrementNote = '（已达退休年龄，不支付）'; }
+  }
+
+  // Payer logic
+  const fundPays = (insured === 'yes');
+  const fundLabel = fundPays ? '社保基金' : '用人单位（因未参保）';
+  const fundTag = fundPays ? 'tag-fund' : 'tag-company';
+
+  // 1. 一次性伤残补助金
+  if (grade.disability > 0) {
+    const amount = personalWage * grade.disability;
+    rows.push({
+      item: `一次性伤残补助金（${grade.name}）`,
+      calc: `${personalWage.toLocaleString()}元 × ${grade.disability}个月`,
+      amount: amount,
+      payer: fundPays ? '社保基金' : '用人单位',
+      tag: fundPays ? 'tag-fund' : 'tag-company',
+      note: isConstructionHardToDetermine ? '🏗️ 工资基数按100%市月均工资（人社部发〔2014〕103号第7条）' : ''
+    });
+    if (fundPays) fundTotal += amount; else companyTotal += amount;
+  }
+
+  // 2. 一次性工伤医疗补助金 (5-10级，离职时基金支付)
+  if (grade.medical > 0 && resigned === 'yes') {
+    const amount = personalWage * grade.medical;
+    rows.push({
+      item: `一次性工伤医疗补助金（${grade.name}）`,
+      calc: `${personalWage.toLocaleString()}元 × ${grade.medical}个月`,
+      amount: amount,
+      payer: fundPays ? '社保基金' : '用人单位（因未参保）',
+      tag: fundPays ? 'tag-fund' : 'tag-company',
+      note: `须离职方可申领 · ${fundPays ? '社保基金支付（《广东省工伤保险条例》第32条）' : '单位未参保，由单位承担'}`
+    });
+    if (fundPays) fundTotal += amount; else companyTotal += amount;
+  } else if (grade.medical > 0 && resigned === 'no') {
+    rows.push({
+      item: `一次性工伤医疗补助金（${grade.name}）`,
+      calc: `${personalWage.toLocaleString()}元 × ${grade.medical}个月`,
+      amount: 0,
+      payer: fundPays ? '社保基金（离职后）' : '用人单位（离职后）',
+      tag: fundPays ? 'tag-fund' : 'tag-company',
+      note: '⚠️ 仍在职，暂不符合申领条件（须离职后方可申领）'
+    });
+  }
+
+  // 3. 一次性伤残就业补助金 (5-10级，离职时单位支付)
+  if (grade.employment > 0 && resigned === 'yes') {
+    const fullAmount = personalWage * grade.employment;
+    const amount = Math.round(fullAmount * employmentDecrement);
+    const decrementText = employmentDecrement < 1 ? ` × ${Math.round(employmentDecrement*100)}%${decrementNote}` : '';
+    rows.push({
+      item: `一次性伤残就业补助金（${grade.name}）`,
+      calc: `${personalWage.toLocaleString()}元 × ${grade.employment}个月${decrementText}`,
+      amount: amount,
+      payer: '用人单位',
+      tag: 'tag-company',
+      note: `须离职方可申领 · 由用人单位支付（《广东省工伤保险条例》第32条）${employmentDecrement < 1 ? ' · 距退休不足5年递减' : ''}`
+    });
+    companyTotal += amount;
+  } else if (grade.employment > 0 && resigned === 'no') {
+    rows.push({
+      item: `一次性伤残就业补助金（${grade.name}）`,
+      calc: `${personalWage.toLocaleString()}元 × ${grade.employment}个月`,
+      amount: 0,
+      payer: '用人单位（离职后）',
+      tag: 'tag-company',
+      note: '⚠️ 仍在职，暂不符合申领条件（须离职后由用人单位支付）'
+    });
+  }
+
+  // 4. 伤残津贴
+  if (grade.allowance > 0) {
+    const monthlyAllowance = Math.round(personalWage * grade.allowance);
+    const annualAllowance = monthlyAllowance * 12;
+    if (gradeKey <= 4) {
+      rows.push({
+        item: `伤残津贴（${grade.name}，按月）`,
+        calc: `${personalWage.toLocaleString()}元 × ${Math.round(grade.allowance*100)}% = ${monthlyAllowance.toLocaleString()}元/月`,
+        amount: monthlyAllowance,
+        payer: fundPays ? '社保基金' : '用人单位',
+        tag: fundPays ? 'tag-fund' : 'tag-company',
+        note: `按月发放（年度合计 ${fmt(annualAllowance)}），托底标准 5,155元/月`
+      });
+      if (fundPays) fundTotal += annualAllowance; else companyTotal += annualAllowance;
+    } else if (gradeKey === 5 || gradeKey === 6) {
+      rows.push({
+        item: `伤残津贴（${grade.name}，难以安排工作时按月）`,
+        calc: `${personalWage.toLocaleString()}元 × ${Math.round(grade.allowance*100)}% = ${monthlyAllowance.toLocaleString()}元/月`,
+        amount: monthlyAllowance,
+        payer: '用人单位',
+        tag: 'tag-company',
+        note: '如单位能安排适当工作则无需支付'
+      });
+      companyTotal += annualAllowance;
+    }
+  }
+
+  // 5. 停工留薪期工资
+  if (leaveMonths > 0) {
+    const amount = Math.round(salary * leaveMonths);
+    const monthsDisplay = Number.isInteger(leaveMonths) ? leaveMonths.toString() : leaveMonths.toFixed(1);
+    rows.push({
+      item: `停工留薪期工资（${monthsDisplay}个月）`,
+      calc: `${salary.toLocaleString()}元/月 × ${monthsDisplay}个月`,
+      amount: amount,
+      payer: '用人单位',
+      tag: 'tag-company',
+      note: '原工资福利待遇不变，最长24个月（《工伤保险条例》第33条）'
+    });
+    companyTotal += amount;
+  }
+
+  // 6. 生活护理费
+  if (care.ratio > 0) {
+    const monthlyCare = Math.round(cityWage * care.ratio);
+    const annualCare = monthlyCare * 12;
+    rows.push({
+      item: `生活护理费（${care.name}，按月）`,
+      calc: `${cityWage.toLocaleString()}元 × ${Math.round(care.ratio*100)}% = ${monthlyCare.toLocaleString()}元/月`,
+      amount: monthlyCare,
+      payer: fundPays ? '社保基金' : '用人单位',
+      tag: fundPays ? 'tag-fund' : 'tag-company',
+      note: `按月发放（年度合计 ${fmt(annualCare)}）`
+    });
+    if (fundPays) fundTotal += annualCare; else companyTotal += annualCare;
+  }
+
+  // 7. 住院伙食补助费
+  if (hospitalDays > 0) {
+    const amount = hospitalDays * MEAL_ALLOWANCE_PER_DAY;
+    rows.push({
+      item: `住院伙食补助费（${hospitalDays}天）`,
+      calc: `${MEAL_ALLOWANCE_PER_DAY}元/天 × ${hospitalDays}天`,
+      amount: amount,
+      payer: fundPays ? '社保基金' : '用人单位',
+      tag: fundPays ? 'tag-fund' : 'tag-company'
+    });
+    if (fundPays) fundTotal += amount; else companyTotal += amount;
+  }
+
+  // 7a. 各项实际费用
+  const extraExpenses = [
+    { id:'expMedical',       name:'医疗费',               payer: fundPays ? '社保基金（核定报销）' : '用人单位', isEmployerExp: false },
+    { id:'expNursingLeave',  name:'停工留薪期护理费',     payer: '用人单位',                                           isEmployerExp: true  },
+    { id:'expTransport',     name:'交通费',               payer: fundPays ? '社保基金' : '用人单位',                   isEmployerExp: false },
+    { id:'expLodging',       name:'住宿费',               payer: fundPays ? '社保基金' : '用人单位',                   isEmployerExp: false },
+    { id:'expRehab',         name:'工伤康复费',           payer: fundPays ? '社保基金' : '用人单位',                   isEmployerExp: false },
+    { id:'expAssistive',     name:'残疾辅助器具费',       payer: fundPays ? '社保基金' : '用人单位',                   isEmployerExp: false },
+    { id:'expOther',         name:'其他费用（社保目录内）', payer: fundPays ? '社保基金（经确认）' : '用人单位',         isEmployerExp: false },
+    { id:'expOtherCompany',  name:'其他用人单位承担项目',   payer: '用人单位',                                           isEmployerExp: true  },
+  ];
+  extraExpenses.forEach(exp => {
+    const val = parseFloat(document.getElementById(exp.id).value);
+    if (val && val > 0) {
+      const isEmployer = exp.isEmployerExp || (!fundPays && !exp.isEmployerExp);
+      rows.push({
+        item: exp.name,
+        calc: `实际发生金额（凭票据）`,
+        amount: val,
+        payer: (fundPays && !exp.isEmployerExp) ? '社保基金' : '用人单位',
+        tag: (fundPays && !exp.isEmployerExp) ? 'tag-fund' : 'tag-company',
+        note: exp.isEmployerExp ? '用人单位依法/依约定承担' : (fundPays ? '社保基金按规定报销' : '单位未参保，由用人单位承担')
+      });
+      if (fundPays && !exp.isEmployerExp) fundTotal += val;
+      else companyTotal += val;
+    }
+  });
+
+  // 8. 工亡特有赔偿项目
+  if (isDeath) {
+    // 8a. 一次性工亡补助金（★ 2026年标准：1,130,040元）
+    const nationalIncome = parseFloat(document.getElementById('nationalIncome').value) || 56502;
+    const deathSubsidy = nationalIncome * 20;
+    rows.push({
+      item: '一次性工亡补助金',
+      calc: `${nationalIncome.toLocaleString()}元 × 20倍`,
+      amount: deathSubsidy,
+      payer: fundPays ? '社保基金' : '用人单位',
+      tag: fundPays ? 'tag-fund' : 'tag-company',
+      note: '全国统一标准（《工伤保险条例》第39条）· 2026年度标准：56,502×20=1,130,040元'
+    });
+    if (fundPays) fundTotal += deathSubsidy; else companyTotal += deathSubsidy;
+
+    // 8b. 丧葬补助金
+    const funeralAmount = cityWage * 6;
+    rows.push({
+      item: '丧葬补助金',
+      calc: `${cityWage.toLocaleString()}元 × 6个月`,
+      amount: funeralAmount,
+      payer: fundPays ? '社保基金' : '用人单位',
+      tag: fundPays ? 'tag-fund' : 'tag-company'
+    });
+    if (fundPays) fundTotal += funeralAmount; else companyTotal += funeralAmount;
+
+    // 8c. 供养亲属抚恤金
+    for (let i = 1; i <= dependentCounter; i++) {
+      const relEl = document.getElementById(`depRel_${i}`);
+      if (!relEl) continue;
+      const relation = relEl.value;
+      const isOrphan = document.getElementById(`depOrphan_${i}`)?.checked || false;
+      let ratio = (relation === 'spouse') ? 0.40 : 0.30;
+      if (isOrphan) ratio += 0.10;
+      const monthlyAmount = Math.round(personalWage * ratio);
+      const annualAmount = monthlyAmount * 12;
+      const relName = relEl.options[relEl.selectedIndex].text.replace(/（\d+%/,'');
+      rows.push({
+        item: `供养亲属抚恤金——${relName}${isOrphan ? '（孤寡/孤儿+10%）' : ''}（按月）`,
+        calc: `${personalWage.toLocaleString()}元 × ${Math.round(ratio*100)}% = ${monthlyAmount.toLocaleString()}元/月`,
+        amount: monthlyAmount,
+        payer: fundPays ? '社保基金' : '用人单位',
+        tag: fundPays ? 'tag-fund' : 'tag-company',
+        note: `按月发放（年度合计 ${fmt(annualAmount)}），各亲属合计不超过生前工资`
+      });
+      if (fundPays) fundTotal += annualAmount; else companyTotal += annualAmount;
+    }
+  }
+
+  // 9. 社保缴费基数与实际工资差额补足
+  if (fundPays && insuranceBase < personalWage && grade.disability > 0) {
+    const diff = (personalWage - insuranceBase) * grade.disability;
+    if (diff > 0) {
+      rows.push({
+        item: `一次性伤残补助金差额（基数不足部分）`,
+        calc: `(${personalWage.toLocaleString()} - ${insuranceBase.toLocaleString()})元 × ${grade.disability}个月`,
+        amount: diff,
+        payer: '用人单位',
+        tag: 'tag-company',
+        note: '缴费基数低于实际工资的差额由单位补足'
+      });
+      companyTotal += diff;
+    }
+  }
+
+  // ---- Render Results ----
+  const tbody = document.querySelector('#resultTable tbody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const noteHtml = r.note ? `<br><small style="color:#888">${r.note}</small>` : '';
+    tbody.innerHTML += `<tr>
+      <td>${r.item}${noteHtml}</td>
+      <td>${r.calc}</td>
+      <td style="text-align:right;font-weight:600">${r.amount > 0 ? r.amount.toLocaleString('zh-CN') : '暂不符合'}</td>
+      <td style="text-align:center"><span class="tag ${r.tag}">${r.payer}</span></td>
+    </tr>`;
+  });
+
+  // Add total row
+  const grandTotal = fundTotal + companyTotal;
+  tbody.innerHTML += `<tr class="total-row">
+    <td colspan="2">💰 合计（含1年期的按月发放项目估算）</td>
+    <td style="text-align:right">${grandTotal.toLocaleString('zh-CN')}</td>
+    <td style="text-align:center">—</td>
+  </tr>`;
+
+  // Summary
+  document.getElementById('sumFund').textContent = fmt(fundTotal);
+  document.getElementById('sumCompany').textContent = fmt(companyTotal);
+  document.getElementById('sumTotal').textContent = fmt(grandTotal);
+  document.getElementById('sumFundNote').textContent = fundPays ? '（含按月项目×12个月估算）' : '（未参保，无社保赔付）';
+  document.getElementById('sumCompanyNote').textContent = !fundPays ? '（含按月项目×12个月估算）' : '（含按月项目×12个月估算）';
+
+  // Info params
+  const basisText = document.getElementById('salaryBasis').selectedOptions[0].text;
+  document.getElementById('infoWorkerType').textContent = workerType === 'construction' ? '🏗️ 建筑工地工人（按项目参保）' : '🏢 普通企业职工';
+  document.getElementById('infoCityWage').textContent = `${city.name}：${cityWage.toLocaleString()}元/月`;
+  document.getElementById('infoSalaryBasis').textContent = basisText;
+  document.getElementById('infoWageRule').innerHTML = wageRuleText || '按《工伤保险条例》第64条正常计算';
+  document.getElementById('infoBaseSalary').textContent = `${personalWage.toLocaleString()}元/月（${baseNote}）`;
+  document.getElementById('infoInsBase').textContent = fundPays ? `${insuranceBase.toLocaleString()}元/月` : '未参保';
+  document.getElementById('infoRetire').textContent = `${ageYears}周岁${ageMonths}个月 | ${retireNote} | 距退休约${yearsToRetire.toFixed(1)}年`;
+
+  if (yearsToRetire < 5 && grade.employment > 0) {
+    document.getElementById('infoDecrementRow').style.display = 'flex';
+    document.getElementById('infoDecrement').textContent = `${Math.round(employmentDecrement*100)}%${decrementNote}`;
+  } else {
+    document.getElementById('infoDecrementRow').style.display = 'none';
+  }
+
+  // Warnings
+  document.getElementById('uninsuredWarning').style.display = fundPays ? 'none' : 'block';
+  document.getElementById('constructionWageWarning').style.display = isConstructionHardToDetermine ? 'block' : 'none';
+
+  // Legal basis
+  let lawText = `<strong>📜 计算依据：</strong>`;
+  if (workerType === 'construction') {
+    lawText += `<br>🏗️ <strong>建筑工人专属规则：</strong>人社部发〔2014〕103号《关于进一步做好建筑业工伤保险工作的意见》第7条`;
+    if (isConstructionHardToDetermine) {
+      lawText += ` — 工资难以核定时，按<strong>100%市月均工资</strong>作为计发基数（非60%下限）`;
+    }
+  }
+  if (isDeath) {
+    lawText += `<br>① 《工伤保险条例》第39条（工亡待遇）`;
+    lawText += `<br>② 《广东省工伤保险条例》第35条、第64条（本人工资定义）`;
+    lawText += `<br>③ 一次性工亡补助金 = 上一年度全国城镇居民人均可支配收入 × 20倍（2026年度：56,502×20=<strong>1,130,040元</strong>）`;
+    lawText += `<br>④ 丧葬补助金 = 统筹地区上年度职工月平均工资 × 6个月`;
+    lawText += `<br>⑤ 供养亲属抚恤金：配偶40%、其他亲属30%、孤寡老人/孤儿各加10%`;
+  } else {
+    const gradeNum = gradeKey;
+    lawText += `<br>① 《工伤保险条例》（国务院令第586号）第${gradeNum <= 4 ? '35' : gradeNum <= 6 ? '36' : '37'}条`;
+    lawText += `<br>② 《广东省工伤保险条例》第${gradeNum <= 4 ? '28' : gradeNum <= 6 ? '30' : '32'}条、第64条（本人工资定义）`;
+    if (grade.medical > 0) lawText += `<br>③ 《广东省工伤保险条例》第${gradeNum <= 6 ? '31' : '33'}条（一次性工伤医疗补助金+伤残就业补助金）`;
+    if (care.ratio > 0) lawText += `<br>④ 《广东省工伤保险条例》第27条（生活护理费）`;
+    if (employmentDecrement < 1) lawText += `<br>⑤ 《广东省工伤保险条例》第33条：距退休不足5年，一次性伤残就业补助金每年递减20%`;
+  }
+  lawText += `<br>⑥ 本人工资 = 工伤前12个月平均月缴费工资（《工伤保险条例》第64条）`;
+  if (workerType !== 'construction' || !isConstructionHardToDetermine) {
+    lawText += `<br>⑦ 普通职工：低于市月均工资<strong>60%</strong>按60%、高于<strong>300%</strong>按300%（《工伤保险条例》第64条）`;
+  }
+  if (wageMode === 'daily') {
+    lawText += `<br>⑧ 📐 日工资折算：月工资 = 日工资 × <strong>21.75天</strong>（法定月计薪天数，劳社部发〔2008〕3号），非×30天`;
+  }
+  lawText += `<br><br><strong>⚠️ 免责声明：</strong>本计算器仅供法律实务参考，不构成正式法律意见。具体赔偿金额以当地人社局核定为准。`;
+  document.getElementById('lawRef').innerHTML = lawText;
+
+  // Show result section
+  document.getElementById('resultSection').classList.add('show');
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ==================== MODE SWITCH ====================
+
+let currentMode = 'injury';
+let dependentCounter = 0;
+
+function switchMode(mode) {
+  currentMode = mode;
+  const tabInjury = document.getElementById('tabInjury');
+  const tabDeath = document.getElementById('tabDeath');
+  const deathFields = document.getElementById('deathFields');
+  const gradeGroup = document.getElementById('gradeGroup');
+  const careGroup = document.getElementById('careGroup');
+  const resignedGroup = document.getElementById('resignedGroup');
+  const leaveGroup = document.getElementById('leaveGroup');
+
+  if (mode === 'injury') {
+    tabInjury.style.background = '#1a5276'; tabInjury.style.color = '#fff';
+    tabDeath.style.background = '#f8fafc'; tabDeath.style.color = '#555';
+    deathFields.style.display = 'none';
+    if (gradeGroup) gradeGroup.style.display = '';
+    if (careGroup) careGroup.style.display = '';
+    if (resignedGroup) resignedGroup.style.display = '';
+    if (leaveGroup) leaveGroup.style.display = '';
+  } else {
+    tabDeath.style.background = '#c0392b'; tabDeath.style.color = '#fff';
+    tabInjury.style.background = '#f8fafc'; tabInjury.style.color = '#555';
+    deathFields.style.display = 'block';
+    if (gradeGroup) gradeGroup.style.display = 'none';
+    if (careGroup) careGroup.style.display = 'none';
+    if (resignedGroup) resignedGroup.style.display = 'none';
+    if (leaveGroup) leaveGroup.style.display = 'none';
+  }
+}
+
+// ==================== DEPENDENTS ====================
+
+function addDependent() {
+  dependentCounter++;
+  const container = document.getElementById('dependentsList');
+  const div = document.createElement('div');
+  div.className = 'form-row';
+  div.id = `dep_${dependentCounter}`;
+  div.style.marginBottom = '8px';
+  div.innerHTML = `
+    <div class="form-group" style="flex:1.2"><select id="depRel_${dependentCounter}">
+      <option value="spouse">配偶（40%）</option>
+      <option value="other">其他亲属（30%）</option>
+      <option value="parent">父母（30%）</option>
+      <option value="child">子女（30%）</option>
+    </select></div>
+    <div class="form-group" style="flex:0.6"><label style="font-size:11px;display:flex;align-items:center;gap:4px;white-space:nowrap"><input type="checkbox" id="depOrphan_${dependentCounter}"> 孤寡/孤儿</label></div>
+    <div class="form-group" style="flex:0.3"><button type="button" onclick="document.getElementById('dep_${dependentCounter}').remove()" style="padding:4px 8px;background:#fff;border:1px solid #e0e0e0;border-radius:4px;color:#c0392b;cursor:pointer;font-size:12px">✕</button></div>
+  `;
+  container.appendChild(div);
+}
+
+// ==================== RETIREMENT AGE ====================
+
+function calcRetireAgeStatic(birthYear, birthMonth, category) {
+  let originalAge, paceMonths, maxDelayMonths;
+  if (category === 'male')           { originalAge = 60; paceMonths = 4; maxDelayMonths = 36; }
+  else if (category === 'femaleCadre') { originalAge = 55; paceMonths = 4; maxDelayMonths = 36; }
+  else                                { originalAge = 50; paceMonths = 2; maxDelayMonths = 60; }
+  const phaseStartYear = 2025, phaseStartMonth = 1;
+  const origRetireYear = birthYear + originalAge;
+  const origRetireMonth = birthMonth;
+  const monthsFromPhase = (origRetireYear - phaseStartYear) * 12 + (origRetireMonth - phaseStartMonth);
+  let delayMonths, policyMode;
+  if (monthsFromPhase < 0) { delayMonths = 0; policyMode = 'unaffected'; }
+  else { delayMonths = Math.floor(monthsFromPhase / paceMonths) + 1; if (delayMonths >= maxDelayMonths) { delayMonths = maxDelayMonths; policyMode = 'capped'; } else { policyMode = 'transition'; } }
+  const finalAge = originalAge + delayMonths / 12;
+  return { originalAge, finalAge, delayMonths, policyMode, maxDelayMonths };
+}
+
+function updateRetireDisplay() {
+  const gender = document.getElementById('gender').value;
+  const birthYear = parseInt(document.getElementById('birthYear').value) || 1991;
+  const birthMonth = parseInt(document.getElementById('birthMonth').value) || 6;
+  const r = calcRetireAgeStatic(birthYear, birthMonth, gender);
+
+  const now = new Date();
+  let ageY = now.getFullYear() - birthYear, ageM = now.getMonth() + 1 - birthMonth;
+  if (ageM < 0) { ageY--; ageM += 12; }
+  document.getElementById('infoCurrentAge').textContent = `${ageY} 岁 ${ageM} 个月`;
+
+  const retireYears = Math.floor(r.finalAge);
+  const retireMonths = Math.round((r.finalAge - retireYears) * 12);
+  let ageDisplay;
+  if (retireMonths === 0) ageDisplay = `${retireYears} 周岁`;
+  else ageDisplay = `${retireYears} 岁 ${retireMonths} 个月`;
+  document.getElementById('infoRetireAge').textContent = ageDisplay;
+
+  let detail;
+  if (r.policyMode === 'unaffected') detail = `原${r.originalAge}岁退休（不受影响）`;
+  else if (r.policyMode === 'capped') detail = `原${r.originalAge}→新${retireYears}岁（+${Math.round(r.delayMonths/12)}年封顶）`;
+  else detail = `原${r.originalAge}岁，延迟${r.delayMonths}个月`;
+  document.getElementById('infoRetireDetail').textContent = detail;
+
+  let paceText = (gender === 'femaleWorker') ? '每2个月延1个月' : '每4个月延1个月';
+  document.getElementById('retirePolicy').textContent = `2025.1.1起渐进式延迟 · ${paceText} · 最高延迟${Math.round(r.maxDelayMonths/12)}年`;
+}
+
+// ==================== INIT ====================
+
+toggleInsuranceFields();
+updateRetireDisplay();
+onSalaryBasisChange();
+switchMode('injury');
+onWorkerTypeChange();
+</script>
+</body>
+</html>

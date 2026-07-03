@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="律师工具箱">
+<meta name="theme-color" content="#f8fafc">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>律师工具箱</title>
+<style>
+:root {
+  --brand-50: #eff6ff;
+  --brand-100: #dbeafe;
+  --brand-500: #3b82f6;
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --purple-50: #faf5ff;
+  --purple-500: #a855f7;
+  --purple-600: #9333ea;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#f8fafc;
+  color:#0f172a;
+  line-height:1.5;
+}
+
+.container{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+
+/* ====== 顶部导航 ====== */
+.header{
+  position:sticky;top:0;z-index:30;
+  border-bottom:1px solid #e2e8f0;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.header-inner{
+  display:flex;align-items:center;justify-content:space-between;
+  height:3.5rem;
+  max-width:1200px;margin:0 auto;padding:0 1.5rem;
+}
+.header-brand{display:flex;align-items:center;gap:0.5rem;text-decoration:none;color:inherit}
+.header-brand .logo{font-size:1.4rem}
+.header-brand .name{font-weight:700;font-size:1.05rem;color:#0f172a}
+.nav-links{display:flex;align-items:center;gap:0.25rem}
+.nav-link{
+  padding:0.375rem 0.75rem;border-radius:0.375rem;
+  font-size:0.875rem;color:#475569;cursor:pointer;
+  background:none;border:none;font-weight:500;
+  transition:all 0.15s;
+}
+.nav-link:hover{background:#f1f5f9}
+.nav-link.active{background:var(--brand-50);color:var(--brand-700);font-weight:600}
+
+/* ====== 页面容器 ====== */
+.page{display:none}
+.page.active{display:block}
+
+/* ====== Hero 区 ====== */
+.hero{
+  background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);
+  padding:2.5rem 1.5rem 2rem;
+  border-bottom:1px solid #bfdbfe;
+}
+.hero-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;gap:2rem;flex-wrap:wrap;
+}
+.hero-text{flex:1;min-width:280px}
+.hero-text h1{font-size:1.5rem;font-weight:800;color:#1e3a8a;line-height:1.3;margin-bottom:0.5rem}
+.hero-text p{font-size:0.9rem;line-height:1.7;color:#475569;margin-bottom:1.25rem}
+.hero-card{
+  flex:0 0 auto;
+  background:#fff;border-radius:1rem;padding:1.25rem 1.5rem;
+  box-shadow:0 4px 16px rgba(37,99,235,0.1);
+  border:1px solid #bfdbfe;max-width:300px;
+}
+.hero-card .hc-title{font-size:0.8rem;font-weight:600;color:#1e3a8a;margin-bottom:0.75rem}
+.hero-card .step{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:#475569;margin-bottom:0.5rem}
+.hero-card .step-num{
+  background:var(--brand-50);color:var(--brand-600);
+  width:1.5rem;height:1.5rem;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:700;flex-shrink:0;
+}
+
+/* ====== 按钮 ====== */
+.btn-primary{
+  background:var(--brand-600);color:#fff;border:none;
+  border-radius:0.5rem;font-weight:500;
+  padding:0.5rem 1.25rem;cursor:pointer;
+  font-size:0.875rem;transition:background 0.15s;
+}
+.btn-primary:hover{background:var(--brand-700)}
+
+.btn-purple{
+  background:linear-gradient(135deg,var(--purple-500),var(--purple-600));
+  color:#fff;border:none;
+  border-radius:0.5rem;font-weight:600;
+  padding:0.625rem 1.5rem;cursor:pointer;
+  font-size:0.875rem;transition:all 0.2s;
+}
+.btn-purple:hover{opacity:0.9;transform:translateY(-1px)}
+
+.btn-ghost{
+  background:none;border:1px solid #cbd5e1;
+  border-radius:0.5rem;padding:0.5rem 1rem;
+  cursor:pointer;font-size:0.875rem;color:#475569;
+}
+
+/* ====== 区块标题 ====== */
+.section-title{
+  font-size:1.125rem;font-weight:700;color:#0f172a;
+  padding-left:0.75rem;border-left:3px solid var(--brand-600);
+  line-height:1.5;margin-bottom:1.25rem;
+}
+
+/* ====== 分类导航卡 ====== */
+.cat-nav{display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;margin-bottom:2rem}
+.cat-nav-card{
+  background:#fff;border:1px solid #e2e8f0;border-radius:0.75rem;
+  padding:1rem;text-align:center;cursor:pointer;
+  transition:all 0.15s;text-decoration:none;color:inherit;
+}
+.cat-nav-card:hover{border-color:var(--brand-500);box-shadow:0 2px 8px rgba(37,99,235,0.08)}
+.cat-nav-card .cn-emoji{font-size:2rem;margin-bottom:0.25rem}
+.cat-nav-card .cn-name{font-weight:600;color:#0f172a;font-size:0.9rem}
+.cat-nav-card .cn-count{font-size:0.75rem;color:#94a3b8;margin-top:0.125rem}
+
+/* ====== 分类区块 ====== */
+.cat-section{
+  background:#fff;border:1px solid #e2e8f0;
+  border-radius:1rem;overflow:hidden;margin-bottom:1.25rem;
+}
+.cat-header{
+  padding:1rem 1.5rem;font-weight:600;font-size:0.95rem;
+  border-bottom:1px solid #f1f5f9;
+  display:flex;align-items:center;gap:0.5rem;
+}
+.cat-body{padding:1.25rem 1.5rem}
+.cat-body .tools-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:0.875rem;
+}
+
+/* ====== 工具卡片 ====== */
+.tool-card{
+  background:#fff;border:1px solid #e2e8f0;
+  border-radius:0.75rem;padding:1.25rem;
+  transition:all 0.2s;cursor:pointer;
+}
+.tool-card:hover{
+  border-color:var(--brand-500);
+  box-shadow:0 4px 16px rgba(37,99,235,0.1);
+  transform:translateY(-2px);
+}
+.tool-card .tc-top{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem}
+.tool-card .tc-icon{font-size:1.1rem}
+.tool-card .tc-name{font-weight:600;font-size:0.9rem;color:#0f172a;flex:1}
+.tool-card .tc-desc{font-size:0.8rem;color:#64748b;line-height:1.5}
+.tool-card .tc-tags{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.5rem}
+.tool-card .tc-tag{
+  font-size:0.7rem;padding:0.125rem 0.375rem;
+  background:#f1f5f9;border-radius:0.25rem;color:#475569;
+}
+
+/* 徽章 */
+.badge{display:inline-block;padding:0.125rem 0.5rem;font-size:0.625rem;font-weight:600;border-radius:9999px}
+.badge-purple{background:var(--purple-50);color:var(--purple-600)}
+.badge-blue{background:var(--brand-50);color:var(--brand-700)}
+.badge-orange{background:#fff7ed;color:#c2410c}
+
+/* 收藏按钮 */
+.fav-btn{
+  background:none;border:1px solid #e2e8f0;
+  border-radius:0.375rem;padding:0.25rem 0.5rem;
+  cursor:pointer;font-size:0.85rem;flex-shrink:0;
+}
+.fav-btn.active{background:#fff7ed;border-color:#fed7aa}
+
+/* ====== 推荐工具 ====== */
+.rec-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:1rem;
+}
+
+/* ====== 我的工具 ====== */
+.my-tools-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:1.5rem;
+}
+.my-tools-header h2{font-size:1.25rem;font-weight:700;color:#0f172a}
+.my-tools-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1rem;
+}
+.my-tool-card{
+  background:#fff;border:1px solid #e2e8f0;
+  border-radius:0.75rem;padding:1.25rem;
+  transition:all 0.2s;cursor:pointer;position:relative;
+}
+.my-tool-card:hover{
+  border-color:var(--brand-500);
+  box-shadow:0 4px 16px rgba(37,99,235,0.1);
+}
+.my-tool-card .mt-name-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem}
+.my-tool-card .mt-name{font-weight:600;font-size:0.9rem;color:#0f172a}
+.my-tool-card .mt-desc{font-size:0.8rem;color:#64748b;line-height:1.5;margin-bottom:0.75rem}
+.my-tool-card .mt-delete{
+  position:absolute;top:0.75rem;right:0.75rem;
+  background:#fef2f2;color:#dc2626;border:1px solid #fecaca;
+  padding:0.25rem 0.5rem;border-radius:0.375rem;
+  font-size:0.7rem;cursor:pointer;
+}
+
+/* ====== 模态框 ====== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:100;display:none;
+  align-items:center;justify-content:center;
+  padding:1rem;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:#fff;border-radius:1rem;
+  width:100%;max-width:640px;max-height:90vh;
+  overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 1.5rem;border-bottom:1px solid #f1f5f9;
+}
+.modal-top h3{font-weight:700;font-size:1rem}
+.modal-close{background:none;border:none;font-size:1.25rem;cursor:pointer;color:#64748b}
+.modal-body{padding:1.5rem}
+.modal-foot{
+  padding:1rem 1.5rem;border-top:1px solid #f1f5f9;
+  display:flex;justify-content:space-between;
+}
+
+/* ====== 自建工具弹窗 (AI生成) ====== */
+.ai-gen-area{display:flex;flex-direction:column;gap:0.75rem}
+.ai-gen-area textarea{
+  width:100%;padding:0.75rem;border:1px solid #cbd5e1;
+  border-radius:0.5rem;font-size:0.875rem;resize:vertical;
+  font-family:inherit;min-height:80px;
+}
+.ai-gen-area textarea:focus{
+  outline:none;border-color:var(--brand-500);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* ====== 表单控件 ====== */
+input, textarea, select{
+  width:100%;padding:0.5rem 0.75rem;
+  border:1px solid #cbd5e1;border-radius:0.5rem;
+  font-size:0.875rem;font-family:inherit;
+}
+input:focus, textarea:focus, select:focus{
+  outline:none;border-color:var(--brand-500);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.12);
+}
+label{font-size:0.8rem;font-weight:500;color:#475569;display:block;margin-bottom:0.25rem}
+
+/* ====== 搜索结果 ====== */
+.search-wrap{position:relative;margin:0 auto 2rem;max-width:500px}
+.search-wrap input{
+  width:100%;padding:0.75rem 1rem 0.75rem 2.5rem;
+  border-radius:9999px;border:1px solid #cbd5e1;
+  font-size:0.875rem;background:#fff;
+}
+.search-wrap input:focus{outline:none;border-color:var(--brand-500);box-shadow:0 0 0 3px rgba(59,130,246,0.12)}
+.search-wrap .s-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:0.875rem}
+
+/* ====== 工具使用弹窗结果 ====== */
+.result-box{
+  background:#f0fdf4;border:1px solid #bbf7d0;
+  border-radius:0.75rem;padding:1rem;margin-top:1rem;
+}
+.result-box .r-title{font-weight:600;font-size:0.9rem;color:#166534;margin-bottom:0.75rem}
+.result-box .r-body{font-size:0.85rem;color:#15803d;line-height:1.8}
+.result-number{font-variant-numeric:tabular-nums;font-family:'SF Mono','Consolas','Monaco',monospace}
+
+/* ====== Footer ====== */
+.footer{
+  border-top:1px solid #e2e8f0;margin-top:3rem;
+  padding:1.5rem 0;text-align:center;
+  font-size:0.85rem;color:#94a3b8;
+}
+
+/* ====== 响应式 ====== */
+@media(max-width:768px){
+  .cat-nav{grid-template-columns:repeat(3,1fr)}
+  .hero-inner{flex-direction:column;text-align:center}
+  .hero-card{max-width:100%}
+  .nav-links .nav-link{font-size:0.8rem;padding:0.375rem 0.5rem}
+}
+@media(max-width:480px){
+  .cat-nav{grid-template-columns:repeat(2,1fr)}
+  .container{padding:0 1rem}
+  .hero{padding:1.5rem 1rem}
+  .cat-body{padding:1rem}
+  .cat-header{padding:0.75rem 1rem}
+}
+
+/* ====== 滚动条 ====== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+
+/* ====== 对话式创建 ====== */
+.chat-body{
+  display:flex;flex-direction:column;gap:0.75rem;
+  max-height:350px;overflow-y:auto;padding:0 0.25rem;
+}
+.chat-msg{display:flex;gap:0.5rem;font-size:0.85rem;line-height:1.6}
+.chat-msg.user{justify-content:flex-end}
+.chat-msg .bubble{max-width:85%;padding:0.625rem 0.875rem;border-radius:0.875rem}
+.chat-msg.user .bubble{background:var(--brand-600);color:#fff;border-bottom-right-radius:0.25rem}
+.chat-msg.ai .bubble{background:#f1f5f9;color:#0f172a;border-bottom-left-radius:0.25rem}
+.chat-msg.ai .bubble p{margin-bottom:0.25rem}
+.chat-msg.ai .bubble ul{margin:0.25rem 0;padding-left:1.25rem}
+.chat-msg.ai .bubble li{margin-bottom:0.125rem}
+.chat-typing{display:none;align-items:center;gap:0.5rem;font-size:0.8rem;color:#94a3b8;padding:0.5rem}
+.chat-typing .dots{display:flex;gap:3px}
+.chat-typing .dots span{width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:bounce 1.2s infinite}
+.chat-typing .dots span:nth-child(2){animation-delay:0.2s}
+.chat-typing .dots span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+.chat-input-row{display:flex;gap:0.5rem;margin-top:0.75rem}
+.chat-input-row input{flex:1;border-radius:1.5rem;padding:0.625rem 1rem;font-size:0.875rem}
+.chat-input-row button{border-radius:1.5rem;white-space:nowrap;flex-shrink:0}
+
+.chat-type-btn{
+  padding:0.375rem 0.75rem;font-size:0.8rem;
+  border:1px solid #e2e8f0;border-radius:1.5rem;
+  background:#fff;color:#475569;cursor:pointer;
+  transition:all 0.15s;
+}
+.chat-type-btn.active{background:var(--brand-50);color:var(--brand-700);border-color:var(--brand-500);font-weight:600}
+.chat-type-btn:hover{border-color:var(--brand-400)}
+
+/* ====== 隐私 & 提示条 ====== */
+.privacy-note{
+  display:flex;align-items:center;gap:0.5rem;
+  background:#f0fdf4;border:1px solid #bbf7d0;
+  border-radius:0.5rem;padding:0.625rem 1rem;
+  font-size:0.8rem;color:#166534;margin-bottom:1rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ====== 顶部导航 ====== -->
+<header class="header">
+  <div class="header-inner">
+    <a class="header-brand" onclick="showPage('home')">
+      <span class="logo">⚖️</span>
+      <span class="name">律师工具箱</span>
+    </a>
+    <nav class="nav-links">
+      <button class="nav-link active" onclick="showPage('home')">首页</button>
+      <button class="nav-link" onclick="showPage('my-tools')">我的工具</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ==================== 首页 ==================== -->
+<div id="page-home" class="page active">
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <h1>专业律师工具平台</h1>
+        <p>无需编程，通过简单问诊即可创建专属计算工具。<br>律师费报价、违约金计算、工时薪酬… 任何重复计算场景，都能变成一键工具。</p>
+        <button class="btn-purple" style="font-size:0.9rem;padding:0.625rem 1.5rem" onclick="openCreateModal()">＋ 创建新工具</button>
+      </div>
+      <div class="hero-card">
+        <div class="hc-title">创建工具只需 2 步</div>
+        <div class="step"><span class="step-num">1</span> 输入需求，AI 生成</div>
+        <div class="step"><span class="step-num">2</span> 保存即可使用</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 搜索 + 标准工具 -->
+  <section class="container" style="padding-top:2rem">
+    <div class="search-wrap">
+      <span class="s-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="搜索工具，如：工伤、利息、时效…" oninput="filterTools()">
+    </div>
+
+    <div class="section-title">标准工具</div>
+    <div class="cat-nav" id="cat-nav"></div>
+    <div id="tools-sections"></div>
+  </section>
+
+  <!-- 推荐工具 -->
+  <section class="container" style="padding-bottom:3rem">
+    <div class="section-title" style="margin-top:2rem">推荐工具</div>
+    <div class="rec-grid" id="rec-grid"></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">© 2026 律师工具箱 · 数据仅保存在你的浏览器中</div>
+  </footer>
+</div>
+
+<!-- ==================== 我的工具页面 ==================== -->
+<div id="page-my-tools" class="page">
+  <div class="container" style="padding-top:2rem;padding-bottom:3rem">
+    <div class="my-tools-header">
+      <h2>我的工具</h2>
+      <button class="btn-purple" onclick="openCreateModal()">＋ 创建新工具</button>
+    </div>
+    <div class="my-tools-grid" id="my-tools-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:#94a3b8;font-size:0.9rem">
+        还没有自建工具，<a href="javascript:void(0)" onclick="openCreateModal()" style="color:var(--brand-600);">点击创建</a>你的第一个工具吧
+      </div>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="container">© 2026 律师工具箱 · 数据仅保存在你的浏览器中</div>
+  </footer>
+</div>
+
+<!-- ==================== AI 对话式创建弹窗 ==================== -->
+<div class="modal-overlay" id="create-modal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h3>🤖 AI 对话创建工具</h3>
+      <button class="modal-close" onclick="closeCreateModal()">✕</button>
+    </div>
+    <div class="privacy-note" style="margin:0.75rem 1.5rem 0">
+      <span>💡</span> 描述你想做的工具，AI 会追问细节，确认清楚后自动生成计算器
+    </div>
+    <!-- 类型选择 -->
+    <div style="padding:0.75rem 1.5rem 0;display:flex;gap:0.5rem;flex-wrap:wrap" id="chat-type-bar">
+      <button class="chat-type-btn active" data-type="calculator" onclick="selectChatType(this,'calculator')">🧮 计算器</button>
+      <button class="chat-type-btn" data-type="form" onclick="selectChatType(this,'form')">📋 表单生成</button>
+      <button class="chat-type-btn" data-type="date" onclick="selectChatType(this,'date')">📅 日期计算</button>
+      <button class="chat-type-btn" data-type="free" onclick="selectChatType(this,'free')">🔧 不限</button>
+    </div>
+    <!-- 对话区 -->
+    <div class="modal-body" style="padding-top:0.75rem">
+      <div class="chat-body" id="chat-body"></div>
+      <div class="chat-typing" id="chat-typing">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span>AI 思考中…</span>
+      </div>
+      <!-- 预览区 -->
+      <div id="chat-preview" style="display:none;margin-top:1rem">
+        <div style="font-weight:600;font-size:0.9rem;color:#0f172a;margin-bottom:0.5rem">预览</div>
+        <div id="chat-preview-frame" style="border:1px solid #e2e8f0;border-radius:0.75rem;overflow:hidden;min-height:200px"></div>
+        <div style="display:flex;gap:0.75rem;margin-top:0.75rem">
+          <button class="btn-primary" style="flex:1" onclick="saveChatTool()">💾 保存</button>
+          <button class="btn-ghost" style="flex:1" onclick="retryChatGenerate()">🔄 重新生成</button>
+        </div>
+      </div>
+      <!-- 输入区 -->
+      <div class="chat-input-row" id="chat-input-row">
+        <input id="chat-input" placeholder="描述你需要的工具…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="btn-purple" onclick="sendChat()">发送</button>
+      </div>
+      <!-- 生成按钮（对话足够后显示） -->
+      <button class="btn-purple" id="chat-generate-btn" style="display:none;width:100%" onclick="requestGenerate()">
+        🤖 信息够了，开始生成
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 工具使用弹窗 ==================== -->
+<div class="modal-overlay" id="tool-use-modal">
+  <div class="modal-box" style="padding:0">
+    <div class="modal-top">
+      <h3 id="tool-use-title"></h3>
+      <button class="modal-close" onclick="closeToolUseModal()">✕</button>
+    </div>
+    <div class="modal-body" id="tool-use-body"></div>
+  </div>
+</div>
+
+<!-- ==================== JavaScript ==================== -->
+<script>
+var _hmt=_hmt||[];
+(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?5c228975b7a22badf25882e7b0eb94f7";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();
+
+// ============ 数据 ============
+var TOOLS = [
+  {id:'work-injury',  name:'工伤赔偿计算',  cat:'calc', icon:'💰', desc:'1-10级伤残补助金、医疗/就业补助金'},
+  {id:'interest',     name:'利息/逾期利息',  cat:'calc', icon:'💰', desc:'LPR/自定义利率、起止日期'},
+  {id:'overtime',     name:'加班费计算',      cat:'calc', icon:'💰', desc:'工作日×1.5、休息日×2、节假日×3'},
+  {id:'litigation',   name:'诉讼费计算',      cat:'calc', icon:'💰', desc:'财产案件累进、劳动/离婚案件'},
+  {id:'traffic',      name:'交通事故赔偿',    cat:'calc', icon:'💰', desc:'医疗费、误工费、残疾赔偿金等'},
+  {id:'severance',    name:'经济补偿金计算',  cat:'calc', icon:'💰', desc:'N/N+1/2N、社平工资三倍封顶'},
+  {id:'limitation',   name:'诉讼时效计算',    cat:'date', icon:'⏰', desc:'普通/特殊时效、起算日、到期日'},
+  {id:'labor-arb',    name:'劳动仲裁时效',    cat:'date', icon:'⏰', desc:'1年仲裁时效、中断/中止情形'},
+  {id:'admin-review', name:'行政复议期限',    cat:'date', icon:'⏰', desc:'60日申请期限、中止/延长'},
+  {id:'appeal-period',name:'上诉期限计算',    cat:'date', icon:'⏰', desc:'民事15日、刑事10日、行政15日'},
+  {id:'appeal-deadline',name:'上诉截止日',    cat:'date', icon:'⏰', desc:'裁决日期+期限、节假日顺延'},
+  {id:'evidence',     name:'举证期限提醒',    cat:'date', icon:'⏰', desc:'举证通知书期限、延期申请'},
+  {id:'preservation', name:'保全到期提醒',    cat:'date', icon:'⏰', desc:'财产/证据保全期限、续保提醒'},
+  {id:'annual-leave', name:'年休假折算',      cat:'labor',icon:'🏢', desc:'应休未休折算、累计工作年限'},
+  {id:'maternity',    name:'产假/陪产假',     cat:'labor',icon:'🏢', desc:'产假98-178天、陪产假7-30天'},
+  {id:'sick-leave',   name:'病假工资计算',    cat:'labor',icon:'🏢', desc:'医疗期、病假工资比例'},
+  {id:'resignation',  name:'离职补偿计算',    cat:'labor',icon:'🏢', desc:'N/N+1/2N、合法/违法解除'},
+  {id:'mask',         name:'文书脱敏处理',    cat:'ai',  icon:'🤖', desc:'身份证/手机/姓名自动脱敏'},
+  {id:'clause',       name:'合同条款检索',    cat:'ai',  icon:'🤖', desc:'关键词检索、风险条款标注'},
+  {id:'compensation', name:'赔偿项目速算',    cat:'ai',  icon:'🤖', desc:'分项输入、自动汇总赔偿总额'},
+];
+
+var CATEGORIES = [
+  {key:'calc',  name:'计算工具',    emoji:'💰'},
+  {key:'date',  name:'时效与日期',  emoji:'⏰'},
+  {key:'labor', name:'劳动用工',    emoji:'🏢'},
+  {key:'ai',    name:'AI 辅助工具', emoji:'🤖'},
+];
+
+var RECOMMENDED = ['work-injury','severance','limitation','mask'];
+
+var myTools = JSON.parse(localStorage.getItem('lawyer-my-tools')||'[]');
+var pendingTool = null; // AI生成的待保存工具
+
+// ============ 渲染首页 ============
+function renderHome() {
+  // 分类导航
+  var catNav = document.getElementById('cat-nav');
+  catNav.innerHTML = CATEGORIES.map(function(c) {
+    var count = TOOLS.filter(function(t){return t.cat===c.key}).length;
+    return '<a class="cat-nav-card" href="#cat-'+c.key+'" onclick="scrollToCat(\''+c.key+'\')">'+
+      '<div class="cn-emoji">'+c.emoji+'</div>'+
+      '<div class="cn-name">'+c.name+'</div>'+
+      '<div class="cn-count">'+count+' 个工具</div></a>';
+  }).join('');
+
+  // 分类区块
+  var sections = document.getElementById('tools-sections');
+  sections.innerHTML = CATEGORIES.map(function(c) {
+    var tools = TOOLS.filter(function(t){return t.cat===c.key});
+    return '<div class="cat-section" id="cat-'+c.key+'">'+
+      '<div class="cat-header"><span>'+c.emoji+'</span> '+c.name+
+        '<span style="font-weight:400;color:#94a3b8;font-size:0.85rem;margin-left:0.5rem">'+tools.length+' 个</span></div>'+
+      '<div class="cat-body"><div class="tools-grid">'+
+        tools.map(function(t){return toolCardHTML(t);}).join('')+
+      '</div></div></div>';
+  }).join('');
+
+  // 推荐
+  var recGrid = document.getElementById('rec-grid');
+  recGrid.innerHTML = RECOMMENDED.map(function(id) {
+    var t = TOOLS.find(function(x){return x.id===id});
+    return t ? '<div class="tool-card" onclick="openBuiltinTool(\''+t.id+'\')">'+
+      '<div class="tc-top"><span style="color:#f59e0b">⭐</span>'+
+        '<span class="tc-name">'+t.name+'</span></div>'+
+      '<div class="tc-desc">'+t.desc+'</div></div>' : '';
+  }).join('');
+}
+
+function toolCardHTML(t) {
+  return '<div class="tool-card" onclick="openBuiltinTool(\''+t.id+'\')">'+
+    '<div class="tc-top"><span class="tc-icon">'+t.icon+'</span>'+
+      '<span class="tc-name">'+t.name+'</span></div>'+
+    '<div class="tc-desc">'+t.desc+'</div></div>';
+}
+
+function scrollToCat(key) {
+  var el = document.getElementById('cat-'+key);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ============ 搜索 ============
+function filterTools() {
+  var q = (document.getElementById('search-input').value||'').toLowerCase();
+  document.querySelectorAll('#tools-sections .tool-card').forEach(function(card) {
+    var text = (card.textContent||'').toLowerCase();
+    card.style.display = q ? (text.indexOf(q)>=0 ? '' : 'none') : '';
+  });
+  document.querySelectorAll('#tools-sections .cat-section').forEach(function(sec) {
+    var visible = sec.querySelectorAll('.tool-card:not([style*="display: none"])').length;
+    sec.style.display = q && !visible ? 'none' : '';
+  });
+}
+
+// ============ 我的工具 ============
+function renderMyTools() {
+  var grid = document.getElementById('my-tools-grid');
+  if(!myTools.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:#94a3b8;font-size:0.9rem">还没有自建工具，<a href="javascript:void(0)" onclick="openCreateModal()" style="color:var(--brand-600);">点击创建</a>你的第一个工具吧</div>';
+    return;
+  }
+  grid.innerHTML = myTools.map(function(t,i) {
+    return '<div class="my-tool-card" onclick="openMyTool('+i+')">'+
+      '<div class="mt-name-row"><span>🔧</span><span class="mt-name">'+escHtml(t.name)+'</span><span class="badge badge-purple">自建</span></div>'+
+      '<div class="mt-desc">'+(t.prompt||'自定义工具')+'</div>'+
+      '<button class="mt-delete" onclick="event.stopPropagation();deleteMyTool('+i+')">删除</button></div>';
+  }).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============ 对话式 AI 创建工具 ============
+var chatHistory = [];
+var chatType = 'calculator';
+var chatTurn = 0;
+var pendingTool = null;
+
+function selectChatType(btn, type) {
+  chatType = type;
+  document.querySelectorAll('.chat-type-btn').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+}
+
+function openCreateModal() {
+  chatHistory = [];
+  chatTurn = 0;
+  pendingTool = null;
+  document.getElementById('create-modal').classList.add('show');
+  document.getElementById('chat-body').innerHTML = '';
+  document.getElementById('chat-preview').style.display = 'none';
+  document.getElementById('chat-generate-btn').style.display = 'none';
+  document.getElementById('chat-input-row').style.display = 'flex';
+  document.getElementById('chat-input').value = '';
+  // 重置类型选择
+  document.querySelectorAll('.chat-type-btn').forEach(function(b){b.classList.remove('active')});
+  document.querySelector('.chat-type-btn[data-type="calculator"]').classList.add('active');
+  chatType = 'calculator';
+}
+
+function closeCreateModal() {
+  document.getElementById('create-modal').classList.remove('show');
+}
+
+function addChatBubble(role, text) {
+  var body = document.getElementById('chat-body');
+  var div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  // 简易 markdown 渲染
+  var html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/\*(.+?)\*/g,'<i>$1</i>')
+    .replace(/`(.+?)`/g,'<code style="background:rgba(0,0,0,0.06);padding:0.125rem 0.375rem;border-radius:0.25rem;font-size:0.85em">$1</code>')
+    .replace(/\n/g,'<br>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s,'<ul>$1</ul>');
+  div.innerHTML = '<div class="bubble">'+html+'</div>';
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+function showTyping() {
+  document.getElementById('chat-typing').style.display = 'flex';
+}
+
+function hideTyping() {
+  document.getElementById('chat-typing').style.display = 'none';
+}
+
+function isCodeResponse(text) {
+  // 检测是否包含 HTML 代码
+  var trimmed = text.trim();
+  if(/^<!DOCTYPE/i.test(trimmed)) return true;
+  if(/^<html/i.test(trimmed)) return true;
+  if(/^<div/i.test(trimmed) && /<\/div>$/i.test(trimmed)) return true;
+  if(/^<style/i.test(trimmed)) return true;
+  if(/```html/.test(trimmed) || /```HTML/.test(trimmed)) return true;
+  // 包含完整 HTML 结构
+  if(/<style[\s>]/i.test(trimmed) && /<\/style>/i.test(trimmed) && /<script[\s>]/i.test(trimmed)) return true;
+  return false;
+}
+
+function extractCode(raw) {
+  var code = raw;
+  var m = raw.match(/```(?:html|HTML)?\s*([\s\S]*?)```/);
+  if(m){ code = m[1].trim(); }
+  else {
+    var tags = ['<!DOCTYPE','<html','<div','<style','<script'];
+    var start = 999999;
+    for(var i=0;i<tags.length;i++){var p=raw.indexOf(tags[i]);if(p>-1&&p<start)start=p;}
+    if(start<999999) code = raw.substring(start).trim();
+  }
+  code = code.replace(/^[^<]{1,300}(?=<\w)/s, '');
+  return code;
+}
+
+function showPreview(code) {
+  document.getElementById('chat-input-row').style.display = 'none';
+  document.getElementById('chat-generate-btn').style.display = 'none';
+  document.getElementById('chat-preview-frame').innerHTML = code;
+  document.getElementById('chat-preview').style.display = 'block';
+  document.getElementById('chat-preview').scrollIntoView({behavior:'smooth'});
+}
+
+function callChatAI() {
+  var typeNames = {calculator:'计算器',form:'表单生成',date:'日期计算',free:'通用工具'};
+  var typeName = typeNames[chatType]||'通用工具';
+
+  var systemPrompt = '你是法律工具开发专家。用户想创建一个'+typeName+'类型的法律工具。你需要通过对话了解需求。\n\n'+
+    '对话规则：\n'+
+    '1. 第一轮：理解工具目的，询问关键输入参数和输出要求\n'+
+    '2. 第二轮：确认计算逻辑/公式细节、边界条件、特殊规则\n'+
+    '3. 第三轮：如有遗漏信息再追问，否则直接生成完整HTML代码\n'+
+    '4. 每轮只问1-3个最关键的问题，不要一次问太多\n'+
+    '5. 当信息足够时，直接输出完整HTML代码（以<!DOCTYPE html>或<div>开头，含style和script）\n'+
+    '6. 用友好专业的语气，像同事讨论需求一样\n\n'+
+    '代码要求：移动端优先（max-width:480px），白色背景，设计简洁专业，计算结果精确到两位小数，使用toLocaleString()格式化金额。';
+
+  var messages = [{role:'system',content:systemPrompt}];
+  chatHistory.forEach(function(m){messages.push(m)});
+
+  return fetch('https://api.deepseek.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer sk-d837718311ae4143b9215ee6934ee29b'},
+    body:JSON.stringify({model:'deepseek-v4-pro',messages:messages,max_tokens:4096,temperature:0.5})
+  }).then(function(r){return r.json()})
+    .then(function(data){
+      var raw = (data.choices&&data.choices[0]&&data.choices[0].message) ? data.choices[0].message.content : '';
+      if(!raw) throw new Error(data.error?data.error.message||JSON.stringify(data.error):'未知错误');
+      return raw;
+    });
+}
+
+function sendChat() {
+  var input = document.getElementById('chat-input');
+  var text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  chatTurn++;
+
+  // 显示用户消息
+  addChatBubble('user', text);
+  chatHistory.push({role:'user',content:text});
+
+  // AI 回复
+  showTyping();
+  callChatAI().then(function(reply) {
+    hideTyping();
+    if(isCodeResponse(reply)) {
+      // 代码生成！
+      var code = extractCode(reply);
+      pendingTool = {name:'AI生成工具', prompt:chatHistory[0]?chatHistory[0].content:'自定义工具', code:code, time:Date.now()};
+      addChatBubble('ai', '✅ 已根据你的需求生成工具，请在下方预览：');
+      showPreview(code);
+    } else {
+      // 对话继续
+      addChatBubble('ai', reply);
+      chatHistory.push({role:'assistant',content:reply});
+      // 对话超过2轮显示"直接生成"按钮
+      if(chatTurn >= 2) {
+        document.getElementById('chat-generate-btn').style.display = '';
+      }
+    }
+  }).catch(function(e) {
+    hideTyping();
+    addChatBubble('ai', '⚠️ 请求失败：'+e.message+'，请重试');
+  });
+}
+
+function requestGenerate() {
+  var typeNames = {calculator:'计算器',form:'表单生成',date:'日期计算',free:'通用工具'};
+  var input = '信息已经足够了，请直接生成完整的HTML代码。';
+  addChatBubble('user', input);
+  chatHistory.push({role:'user',content:input});
+  document.getElementById('chat-generate-btn').style.display = 'none';
+  showTyping();
+
+  callChatAI().then(function(reply) {
+    hideTyping();
+    var code = extractCode(reply);
+    pendingTool = {name:'AI生成工具', prompt:chatHistory[0]?chatHistory[0].content:'自定义工具', code:code, time:Date.now()};
+    addChatBubble('ai', '✅ 已生成工具，请在下方预览：');
+    showPreview(code);
+  }).catch(function(e) {
+    hideTyping();
+    addChatBubble('ai', '⚠️ 生成失败：'+e.message+'，请重试');
+  });
+}
+
+function saveChatTool() {
+  if(!pendingTool) return;
+  // 用对话第一句作为工具名
+  var firstName = '';
+  for(var i=0;i<chatHistory.length;i++) {
+    if(chatHistory[i].role==='user'){firstName=chatHistory[i].content.substring(0,30);break;}
+  }
+  pendingTool.name = firstName||'自定义工具';
+  pendingTool.prompt = firstName||'自定义工具';
+  myTools.unshift(pendingTool);
+  localStorage.setItem('lawyer-my-tools',JSON.stringify(myTools));
+  closeCreateModal();
+  showPage('my-tools');
+  renderMyTools();
+  pendingTool = null;
+}
+
+function retryChatGenerate() {
+  pendingTool = null;
+  document.getElementById('chat-preview').style.display = 'none';
+  document.getElementById('chat-input-row').style.display = 'flex';
+  requestGenerate();
+}
+
+// ============ 自建工具：打开使用 ============
+function openMyTool(index) {
+  var t = myTools[index];
+  if(!t) return;
+  document.getElementById('tool-use-title').textContent = t.name||t.prompt;
+  // 用 iframe 渲染，确保 <script> 能执行
+  document.getElementById('tool-use-body').innerHTML = '<iframe id="tool-iframe" style="width:100%;min-height:400px;border:none" srcdoc="'+escAttr(t.code||'<p>代码为空</p>')+'"></iframe>';
+  // 自适应高度
+  var iframe = document.getElementById('tool-iframe');
+  iframe.onload = function() {
+    try {
+      var h = iframe.contentWindow.document.body.scrollHeight;
+      if(h > 400) iframe.style.height = h + 'px';
+    } catch(e) {}
+  };
+  document.getElementById('tool-use-modal').classList.add('show');
+}
+
+function escAttr(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============ 内置工具 ============
+function openBuiltinTool(id) {
+  var t = TOOLS.find(function(x){return x.id===id});
+  if(!t) return;
+  document.getElementById('tool-use-title').textContent = t.name;
+  var body = '';
+  if(id==='work-injury') body = '<iframe src="work-injury-calculator.html" style="width:100%;min-height:700px;border:none" onload="resizeIframe(this)"></iframe>';
+  else if(id==='severance') body = renderSeverance();
+  else if(id==='interest') body = '<iframe src="interest-calculator.html" style="width:100%;min-height:700px;border:none" onload="resizeIframe(this)"></iframe>';
+  else if(id==='mask') body = renderMask();
+  else body = '<div style="text-align:center;padding:2rem;color:#64748b;font-size:0.9rem">「'+t.name+'」功能开发中</div>';
+  document.getElementById('tool-use-body').innerHTML = body;
+  document.getElementById('tool-use-modal').classList.add('show');
+}
+
+function resizeIframe(iframe) {
+  try {
+    var h = iframe.contentWindow.document.body.scrollHeight;
+    if (h > 700) iframe.style.height = (h + 40) + 'px';
+  } catch(e) {}
+}
+
+function closeToolUseModal() {
+  document.getElementById('tool-use-modal').classList.remove('show');
+}
+
+// ====== 工伤赔偿 ======
+function renderWorkInjury() {
+  return '<div style="display:flex;flex-direction:column;gap:1rem">'+
+    '<div><label>伤残等级</label><select id="wi-grade">'+
+      ['十级','九级','八级','七级','六级','五级','四级','三级','二级','一级'].map(function(x,i){return '<option value="'+(10-i)+'">'+x+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label>本人工资（元/月）</label><input id="wi-salary" type="number" placeholder="如 8000"></div>'+
+    '<div><label>统筹地区上年度职工月平均工资（元）</label><input id="wi-avg" type="number" value="8000"></div>'+
+    '<button class="btn-primary" style="width:100%;padding:0.625rem" onclick="calcWorkInjury()">计算</button>'+
+    '<div id="wi-result" style="display:none" class="result-box"><div class="r-title">计算结果</div><div class="r-body" id="wi-result-body"></div></div></div>';
+}
+
+function calcWorkInjury() {
+  var grade = parseInt(document.getElementById('wi-grade').value);
+  var salary = parseFloat(document.getElementById('wi-salary').value)||0;
+  var avg = parseFloat(document.getElementById('wi-avg').value)||8000;
+  var months = [27,25,23,21,18,16,13,11,9,7][grade-1];
+  var medM = [15,12,10,8,6,4,3,2,1,1][grade-1];
+  var empM = [15,12,10,8,6,4,3,2,1,1][grade-1];
+  var d=salary*months, m1=avg*medM, m2=avg*empM;
+  document.getElementById('wi-result').style.display='block';
+  document.getElementById('wi-result-body').innerHTML =
+    '<div style="display:flex;justify-content:space-between"><span>一次性伤残补助金（'+months+'个月）</span><span class="result-number" style="font-weight:700">¥'+d.toLocaleString()+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>一次性工伤医疗补助金（'+medM+'个月）</span><span class="result-number" style="font-weight:700">¥'+m1.toLocaleString()+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>一次性伤残就业补助金（'+empM+'个月）</span><span class="result-number" style="font-weight:700">¥'+m2.toLocaleString()+'</span></div>'+
+    '<hr style="border:none;border-top:1px solid #bbf7d0;margin:0.5rem 0">'+
+    '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem"><span>合计</span><span class="result-number">¥'+(d+m1+m2).toLocaleString()+'</span></div>';
+}
+
+// ====== 经济补偿金 ======
+function renderSeverance() {
+  return '<div style="display:flex;flex-direction:column;gap:1rem">'+
+    '<div><label>工作年限（年）</label><input id="sv-years" type="number" placeholder="如 3.5"></div>'+
+    '<div><label>离职前12个月平均工资（元/月）</label><input id="sv-salary" type="number" placeholder="如 15000"></div>'+
+    '<div><label>社平工资三倍（元）</label><input id="sv-cap" type="number" value="36588"></div>'+
+    '<div><label>补偿类型</label><select id="sv-type"><option value="N">N（协商一致/合法解除）</option><option value="N+1">N+1（未提前30天通知）</option><option value="2N">2N（违法解除赔偿金）</option></select></div>'+
+    '<button class="btn-primary" style="width:100%;padding:0.625rem" onclick="calcSeverance()">计算</button>'+
+    '<div id="sv-result" style="display:none" class="result-box"><div class="r-title">计算结果</div><div class="r-body" id="sv-result-body"></div></div></div>';
+}
+
+function calcSeverance() {
+  var years = parseFloat(document.getElementById('sv-years').value)||0;
+  var salary = parseFloat(document.getElementById('sv-salary').value)||0;
+  var cap = parseFloat(document.getElementById('sv-cap').value)||36588;
+  var type = document.getElementById('sv-type').value;
+  var capped = salary > cap;
+  var effective = Math.min(salary,cap);
+  var N = Math.round(years*2)/2;
+  var nValue = capped ? Math.min(N,12) : N;
+  var mult = type==='N'?nValue:type==='N+1'?nValue+1:nValue*2;
+  var result = effective*mult;
+  document.getElementById('sv-result').style.display='block';
+  document.getElementById('sv-result-body').innerHTML =
+    '<div style="display:flex;justify-content:space-between"><span>工作年限 N</span><span class="result-number" style="font-weight:700">'+N+' 年</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>计算基数</span><span class="result-number" style="font-weight:700">¥'+effective.toLocaleString()+'/月</span></div>'+
+    (capped?'<div style="font-size:0.75rem;color:#f59e0b">⚠ 工资超过社平三倍，已封顶</div>':'')+
+    '<div style="display:flex;justify-content:space-between"><span>补偿倍数</span><span class="result-number" style="font-weight:700">'+mult+'</span></div>'+
+    '<hr style="border:none;border-top:1px solid #bbf7d0;margin:0.5rem 0">'+
+    '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem"><span>经济补偿金</span><span class="result-number">¥'+result.toLocaleString()+'</span></div>';
+}
+
+// ====== 利息计算 ======
+function renderInterest() {
+  return '<div style="display:flex;flex-direction:column;gap:1rem">'+
+    '<div><label>本金（元）</label><input id="ir-principal" type="number" placeholder="如 100000"></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">'+
+      '<div><label>起算日期</label><input id="ir-start" type="date" value="2024-01-01"></div>'+
+      '<div><label>截止日期</label><input id="ir-end" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div></div>'+
+    '<div><label>利率标准</label><select id="ir-rate-type" onchange="toggleCustom()">'+
+      '<option value="lpr1y">LPR（1年期）</option><option value="lpr5y">LPR（5年期以上）</option><option value="lpr4x">LPR × 4（违约金上限）</option><option value="custom">自定义利率</option></select></div>'+
+    '<div id="ir-custom-wrap" style="display:none"><label>自定义年利率（%）</label><input id="ir-custom-rate" type="number" step="0.01" placeholder="如 6.0"></div>'+
+    '<button class="btn-primary" style="width:100%;padding:0.625rem" onclick="calcInterest()">计算</button>'+
+    '<div id="ir-result" style="display:none" class="result-box"><div class="r-title">计算结果</div><div class="r-body" id="ir-result-body"></div></div></div>';
+}
+
+function toggleCustom() {
+  document.getElementById('ir-custom-wrap').style.display = document.getElementById('ir-rate-type').value==='custom'?'block':'none';
+}
+
+function calcInterest() {
+  var p = parseFloat(document.getElementById('ir-principal').value)||0;
+  var start = new Date(document.getElementById('ir-start').value);
+  var end = new Date(document.getElementById('ir-end').value);
+  var days = Math.max(0,Math.floor((end-start)/(1000*60*60*24)));
+  var rateType = document.getElementById('ir-rate-type').value;
+  var rate=0, label='';
+  if(rateType==='lpr1y'){rate=0.035;label='LPR 1年期（3.5%）';}
+  else if(rateType==='lpr5y'){rate=0.0395;label='LPR 5年期以上（3.95%）';}
+  else if(rateType==='lpr4x'){rate=0.14;label='LPR × 4（14%）';}
+  else {rate=(parseFloat(document.getElementById('ir-custom-rate').value)||0)/100;label='自定义（'+(rate*100).toFixed(2)+'%）';}
+  var interest = p*rate*days/365;
+  document.getElementById('ir-result').style.display='block';
+  document.getElementById('ir-result-body').innerHTML =
+    '<div style="display:flex;justify-content:space-between"><span>本金</span><span class="result-number" style="font-weight:700">¥'+p.toLocaleString()+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>天数</span><span class="result-number" style="font-weight:700">'+days+' 天</span></div>'+
+    '<div style="display:flex;justify-content:space-between"><span>利率</span><span class="result-number" style="font-weight:700">'+label+'</span></div>'+
+    '<hr style="border:none;border-top:1px solid #bbf7d0;margin:0.5rem 0">'+
+    '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:1rem"><span>利息</span><span class="result-number">¥'+interest.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'</span></div>';
+}
+
+// ====== 文书脱敏 ======
+function renderMask() {
+  return '<div style="display:flex;flex-direction:column;gap:1rem">'+
+    '<div><label>粘贴文书内容</label><textarea id="mask-input" rows="6" placeholder="粘贴需脱敏的文书内容…"></textarea></div>'+
+    '<button class="btn-primary" style="width:100%;padding:0.625rem" onclick="doMask()">执行脱敏</button>'+
+    '<div id="mask-result-wrap" style="display:none">'+
+      '<label>脱敏结果</label><textarea id="mask-result" rows="6" readonly style="background:#f0fdf4;color:#15803d;border-color:#bbf7d0"></textarea>'+
+      '<button class="btn-ghost" style="width:100%;margin-top:0.5rem" onclick="copyMask()">复制结果</button></div></div>';
+}
+
+function doMask() {
+  var text = document.getElementById('mask-input').value;
+  text = text.replace(/\b(\d{6})(\d{8})(\d{4})\b/g,'$1********$3');
+  text = text.replace(/\b(1[3-9]\d)(\d{4})(\d{4})\b/g,'$1****$3');
+  text = text.replace(/(北京市|上海市|广州市|深圳市|天津市|重庆市|成都市|杭州市|武汉市|南京市|西安市|长沙市)([^\s，,。]{0,10})(市|区|县|镇|村|街道|路|号)/g,'$1***$3');
+  document.getElementById('mask-result').value = text;
+  document.getElementById('mask-result-wrap').style.display='block';
+}
+
+function copyMask() {
+  navigator.clipboard.writeText(document.getElementById('mask-result').value).then(function(){alert('已复制');});
+}
+
+// ============ 删除自建工具 ============
+function deleteMyTool(index) {
+  if(!confirm('确定删除此工具？')) return;
+  myTools.splice(index,1);
+  localStorage.setItem('lawyer-my-tools',JSON.stringify(myTools));
+  renderMyTools();
+}
+
+// ============ 页面切换 ============
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('active')});
+  if(page==='home') document.querySelector('.nav-links .nav-link:first-child').classList.add('active');
+  else document.querySelectorAll('.nav-link')[1].classList.add('active');
+  if(page==='my-tools') renderMyTools();
+  if(page==='home') renderHome();
+}
+
+// ====== 关闭弹窗 ESC ======
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeCreateModal();closeToolUseModal();}});
+document.querySelectorAll('.modal-overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){closeCreateModal();closeToolUseModal();}})});
+
+// ====== 启动 ======
+renderHome();
+</script>
+</body>
+</html>
