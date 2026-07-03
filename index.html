@@ -840,11 +840,14 @@ function openBuiltinTool(id) {
   if(!t) return;
   document.getElementById('tool-use-title').textContent = t.name;
   var body = '';
+  var isWide = (id==='work-injury' || id==='interest');
   if(id==='work-injury') body = '<iframe src="work-injury-calculator.html" style="width:100%;min-height:700px;border:none" onload="resizeIframe(this)"></iframe>';
   else if(id==='severance') body = renderSeverance();
   else if(id==='interest') body = '<iframe src="interest-calculator.html" style="width:100%;min-height:700px;border:none" onload="resizeIframe(this)"></iframe>';
   else if(id==='mask') body = renderMask();
   else body = '<div style="text-align:center;padding:2rem;color:#64748b;font-size:0.9rem">「'+t.name+'」功能开发中</div>';
+  var modalBox = document.querySelector('#tool-use-modal .modal-box');
+  modalBox.style.maxWidth = isWide ? '95vw' : '640px';
   document.getElementById('tool-use-body').innerHTML = body;
   document.getElementById('tool-use-modal').classList.add('show');
 }
